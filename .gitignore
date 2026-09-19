@@ -1,0 +1,144 @@
+# ============================================================
+# Music Club Platform - .gitignore
+# Generated for Day 01 Kickoff
+# ============================================================
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.swp
+*.swo
+
+# IDE
+.idea/
+*.iml
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+*.code-workspace
+.project
+.classpath
+.settings/
+
+# ============================================================
+# Java / Spring Boot
+# ============================================================
+backend/target/
+backend/build/
+backend/.gradle/
+backend/out/
+backend/*.class
+backend/*.jar
+backend/*.war
+backend/logs/
+backend/*.log
+
+# ============================================================
+# Python / DSP Service
+# ============================================================
+dsp-service/.venv/
+dsp-service/venv/
+dsp-service/env/
+dsp-service/__pycache__/
+dsp-service/**/__pycache__/
+dsp-service/*.py[cod]
+dsp-service/*$py.class
+dsp-service/.pytest_cache/
+dsp-service/.coverage
+dsp-service/htmlcov/
+dsp-service/.mypy_cache/
+dsp-service/.ruff_cache/
+dsp-service/dist/
+dsp-service/build/
+dsp-service/*.egg-info/
+dsp-service/.env
+dsp-service/.env.local
+
+# ============================================================
+# Flutter / Dart / Mobile
+# ============================================================
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/.pub-cache/
+mobile/.pub/
+mobile/build/
+mobile/ios/Pods/
+mobile/ios/.symlinks/
+mobile/ios/Flutter/Flutter.framework
+mobile/ios/Flutter/Flutter.podspec
+mobile/android/.gradle/
+mobile/android/app/build/
+mobile/android/build/
+mobile/android/local.properties
+mobile/android/**/GeneratedPluginRegistrant.java
+mobile/android/key.properties
+mobile/ios/Runner.xcworkspace/xcuserdata/
+mobile/*.iml
+mobile/.idea/
+mobile/.metadata
+
+# ============================================================
+# React / TypeScript / Node (Admin Web)
+# ============================================================
+admin-web/node_modules/
+admin-web/dist/
+admin-web/build/
+admin-web/.next/
+admin-web/out/
+admin-web/.cache/
+admin-web/.parcel-cache/
+admin-web/coverage/
+admin-web/.env
+admin-web/.env.local
+admin-web/.env.development.local
+admin-web/.env.test.local
+admin-web/.env.production.local
+admin-web/npm-debug.log*
+admin-web/yarn-debug.log*
+admin-web/yarn-error.log*
+admin-web/pnpm-debug.log*
+admin-web/.npm/
+admin-web/.yarn/
+
+# ============================================================
+# Database
+# ============================================================
+database/*.sql.bak
+database/*.dump
+
+# ============================================================
+# Experiments / Research
+# ============================================================
+experiments/datasets/raw/
+experiments/datasets/private/
+experiments/notebooks/.ipynb_checkpoints/
+experiments/results/*.tmp
+
+# ============================================================
+# Secrets / Config (NEVER commit)
+# ============================================================
+*.pem
+*.key
+*.p12
+*.jks
+secrets/
+credentials/
+.env
+.env.*
+!.env.example
+
+# ============================================================
+# Logs / Temp
+# ============================================================
+*.log
+logs/
+tmp/
+temp/
+.cache/
