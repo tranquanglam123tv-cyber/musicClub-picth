@@ -1,2665 +1,2793 @@
-# ROADMAP 100 NGÀY
-## Đề tài
-**Nghiên cứu ứng dụng kỹ thuật phân tích tần số âm thanh F₀ tự động nhận diện Tông giọng và gợi ý bài hát theo thể loại cho hệ thống quản lý Câu lạc bộ Âm nhạc đa nền tảng**
+# ROADMAP 100 NGÀY - PHIÊN BẢN V3.3
+## Đề tài: Hệ thống Quản lý Câu lạc bộ Âm nhạc với Phân tích Tần số Âm thanh F₀ và Gợi ý Bài hát
 
-> **Mục tiêu:** Hoàn thành một đồ án có giá trị nghiên cứu rõ ràng nhưng thực tế cho **2 sinh viên trong 100 ngày**, ưu tiên thuật toán F₀/pitch detection, nhận diện voice range, recommendation; sau đó tích hợp Backend, Mobile và Admin.
+**Kiến trúc:** Hybrid Database (MySQL Server + SQLite Local)
+**Cập nhật:** Risk Analysis & Async Pipeline Design
 
----
+**Số thành viên:** 5 sinh viên  
+**Thời gian:** 100 ngày  
 
-# 1. Nguyên tắc triển khai
-
-## 1.1. Ưu tiên nghiên cứu
-
-Thứ tự ưu tiên:
-
-1. Thu thập dữ liệu và hiểu đặc tính tín hiệu giọng hát.
-2. F₀ / pitch detection.
-3. Làm sạch tín hiệu, voice activity detection, smoothing và loại outlier.
-4. Từ F₀ suy ra **vocal range** và nhãn giọng.
-5. Đánh giá độ chính xác bằng ground truth.
-6. Gợi ý bài hát dựa trên range + tone/key + genre.
-7. API hóa module phân tích.
-8. Mobile và Admin.
-9. Testing, tối ưu, tài liệu và bảo vệ.
-
-## 1.2. Quyết định kỹ thuật
-
-### Phương án khuyến nghị
-
-**Không tự viết thuật toán DSP từ đầu.** Sử dụng thư viện xử lý tín hiệu đã được kiểm chứng, sau đó xây dựng pipeline và phương pháp đánh giá riêng của đồ án.
-
-| Thành phần | Khuyến nghị |
-|---|---|
-| Audio analysis | **Python** |
-| Pitch/F₀ | **librosa.pyin** làm baseline chính |
-| Pitch baseline phụ | `librosa.yin` để so sánh |
-| Audio I/O | `soundfile`, `librosa` |
-| Signal processing | `numpy`, `scipy` |
-| API phân tích | **FastAPI** |
-| Backend nghiệp vụ | **Java + Spring Boot** |
-| Auth | Spring Security + JWT |
-| Database | MySQL |
-| Mobile | Flutter/Dart |
-| State management | Provider hoặc Riverpod |
-| HTTP | Dio |
-| Recording | `record` hoặc `flutter_sound` |
-| Playback | `audioplayers` |
-| Web Admin | React + TypeScript |
-| API testing | Postman |
-| DB modeling | MySQL Workbench |
-| Version control | Git + GitHub |
-| Documentation | Markdown + Mermaid |
-| Testing Python | pytest |
-| Testing Java | JUnit + MockMvc |
-
-### Vì sao chọn Python microservice?
-
-Module F₀ là phần có giá trị nghiên cứu và Python có hệ sinh thái DSP tốt hơn Java/Flutter. Java Spring Boot giữ vai trò **business backend**, còn Python xử lý audio.
-
-**Không nên** cố đưa DSP trực tiếp vào Flutter hoặc tự port thuật toán sang Java trong 100 ngày.
 
 ---
 
-# 2. Phạm vi MVP
+# PHẦN I: PHÂN CÔNG THÀNH VIÊN VÀ TRÁCH NHIỆM
 
-## 2.1. Tính năng BẮT BUỘC
+## 1.1. Cấu trúc nhóm
 
-### Research / Audio
-- [ ] Upload/thu âm giọng hát.
-- [ ] Chuẩn hóa audio.
-- [ ] Pitch/F₀ detection.
-- [ ] Loại bỏ frame không có pitch.
-- [ ] Smoothing F₀.
-- [ ] Chuyển Hz → MIDI/note.
-- [ ] Xác định min/max usable pitch.
-- [ ] Tính vocal range.
-- [ ] Gán nhóm giọng cơ bản: Soprano/Alto/Tenor/Bass hoặc khoảng giọng tương ứng.
-- [ ] Có confidence/quality indicator.
-- [ ] Đánh giá thuật toán trên dataset thử nghiệm.
-
-### Recommendation
-- [ ] Metadata bài hát.
-- [ ] Key/tone bài hát.
-- [ ] Vocal range bài hát.
-- [ ] Genre.
-- [ ] Genre yêu thích của thành viên.
-- [ ] Rule-based scoring.
-- [ ] Top-N recommendation.
-- [ ] Giải thích vì sao bài hát được đề xuất.
-
-### Backend
-- [ ] Authentication/JWT.
-- [ ] Role MEMBER/ADMIN.
-- [ ] Users.
-- [ ] VoiceProfiles.
-- [ ] Songs.
-- [ ] Events.
-- [ ] Posts.
-- [ ] Event registrations.
-- [ ] CRUD API.
-- [ ] Recommendation API.
-- [ ] Voice analysis API gateway.
-
-### Mobile
-- [ ] Login/register.
-- [ ] Trang chủ.
-- [ ] Lịch tập/sự kiện.
-- [ ] Đăng ký sự kiện.
-- [ ] Thu âm.
-- [ ] Upload audio.
-- [ ] Hiển thị F₀/voice range.
-- [ ] Hiển thị bài hát đề xuất.
-- [ ] Bài viết/thông báo cơ bản.
-
-### Admin Web
-- [ ] Login.
-- [ ] Dashboard cơ bản.
-- [ ] Quản lý thành viên.
-- [ ] Quản lý sự kiện.
-- [ ] Quản lý bài hát.
-- [ ] Quản lý bài viết.
-- [ ] Xem voice profile.
-
-## 2.2. Tính năng TÙY CHỌN
-
-Chỉ làm nếu MVP đã ổn định:
-
-- [ ] F₀ realtime trên mobile.
-- [ ] Biểu đồ F₀ realtime.
-- [ ] Spectrogram.
-- [ ] Speaker-independent deep learning.
-- [ ] CNN/Transformer pitch detection.
-- [ ] Recommendation bằng collaborative filtering.
-- [ ] Social feed nâng cao.
-- [ ] Push notification.
-- [ ] Cloud storage.
-- [ ] Docker production deployment.
-- [ ] Multi-language.
-- [ ] Phân loại nhiều voice type hơn.
-- [ ] Phân tích bài hát tự động thay vì nhập metadata thủ công.
-
-> **Quy tắc:** Không triển khai realtime hoặc ML nâng cao nếu upload-file pipeline chưa đạt độ ổn định.
-
----
-
-# 3. Kiến trúc hệ thống
-
-## 3.1. Kiến trúc tổng thể
-
-```text
-                    +----------------------+
-                    |   Flutter Mobile     |
-                    | Member Application   |
-                    +----------+-----------+
-                               |
-                               | HTTPS / REST
-                               v
-                    +----------------------+
-                    | Spring Boot Backend  |
-                    | Auth / Club / Song / |
-                    | Event / Recommendation
-                    +----+------------+----+
-                         |            |
-                 REST    |            | JDBC/JPA
-                         |            v
-                         |       +---------+
-                         |       | MySQL   |
-                         |       +---------+
-                         |
-                         | Internal REST
-                         v
-                 +----------------------+
-                 | Python FastAPI       |
-                 | Audio Analysis       |
-                 | - preprocessing      |
-                 | - F0 / pitch         |
-                 | - range              |
-                 | - voice type         |
-                 +----------+-----------+
-                            |
-                            v
-                     Audio file/temp
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     PROJECT MANAGEMENT                           │
+│              (P1 - Project Manager + Architect)                  │
+└─────────────────────────────────────────────────────────────────┘
+                    │                    │
+          ┌─────────┴─────────┐ ┌────────┴────────┐
+          │  RESEARCH LEAD    │ │  BACKEND LEAD   │
+          │  (P2 - DSP/F0)    │ │  (P3 - Java)    │
+          └─────────┬─────────┘ └────────┬────────┘
+                    │                    │
+          ┌─────────┴─────────┐ ┌────────┴────────┐
+          │  MOBILE LEAD      │ │  ADMIN LEAD     │
+          │  (P4 - Flutter)   │ │  (P5 - React)   │
+          └───────────────────┘ └─────────────────┘
 ```
 
-## 3.2. Luồng phân tích
+## 1.2. Chi tiết vai trò từng thành viên
 
-```text
-Flutter Record/Upload
-        |
-        v
-Spring Boot
-        |
-        | audio file
-        v
-Python FastAPI
-        |
-        +--> resample / mono / normalize
-        |
-        +--> YIN / pYIN
-        |
-        +--> voiced-frame filtering
-        |
-        +--> smoothing / outlier removal
-        |
-        +--> F0 Hz
-        |
-        +--> Hz -> MIDI -> Note
-        |
-        +--> min/max/percentiles
-        |
-        +--> Voice Range
-        |
-        +--> Voice Type
-        |
-        v
-Spring Boot
-        |
-        +--> VoiceProfile
-        |
-        +--> Recommendation scoring
-        |
-        v
-Flutter
+### P1 - Project Manager & Architect
+
+| Phase | Công việc cụ thể |
+|-------|-------------------|
+| Phase 1 | Thiết kế ERD, API contract, cấu trúc database |
+| Phase 2 | Hỗ trợ Backend (P3) về kiến trúc và review |
+| Phase 3 | Review pipeline F0, tích hợp recommendation |
+| Phase 4 | Review Mobile (P4) và Admin (P5) |
+| Phase 5 | Tích hợp toàn hệ thống, kiểm tra end-to-end |
+| Phase 6 | Tổng hợp báo cáo, đóng gói |
+
+**Deliverables:** System Architecture, Documentation, Integration, Final Report
+
+---
+
+### P2 - Research Lead & DSP Specialist
+
+| Phase | Công việc cụ thể |
+|-------|-------------------|
+| Phase 1 | F0 research, pYIN/YIN comparison, dataset |
+| Phase 2 | Python FastAPI service, audio preprocessing |
+| Phase 3 | F0 accuracy evaluation, voice range algorithm |
+| Phase 4 | Tối ưu F0, final evaluation |
+| Phase 5 | Performance testing, failure handling |
+| Phase 6 | Viết chương nghiên cứu, F0 methodology |
+
+**Technical Stack:** Python 3.10+, librosa, FastAPI, numpy, scipy, pytest
+
+**Deliverables:** F0 pipeline, Evaluation report, Research methodology chapter
+
+---
+
+### P3 - Backend Lead
+
+| Phase | Công việc cụ thể |
+|-------|-------------------|
+| Phase 1 | ERD implementation, Spring Boot setup |
+| Phase 2 | Full CRUD APIs, security, integration |
+| Phase 3 | Recommendation algorithm, scoring |
+| Phase 4 | Admin API support |
+| Phase 5 | Performance, security hardening |
+| Phase 6 | API documentation, deployment |
+
+**Technical Stack:** Java 17+, Spring Boot 3.x, Spring Security + JWT, MySQL 8.0, Maven
+
+**Deliverables:** Spring Boot API, Database schema, Recommendation engine
+
+---
+
+### P4 - Mobile Lead
+
+| Phase | Công việc cụ thể |
+|-------|-------------------|
+| Phase 1 | Flutter project setup, architecture |
+| Phase 2 | Auth screens, event screens |
+| Phase 3 | Audio recording, upload, result display |
+| Phase 4 | Recommendation UI, song detail |
+| Phase 5 | Polish, testing, error handling |
+| Phase 6 | Final testing, demo preparation |
+
+**Technical Stack:** Flutter 3.x, Dart, Provider/Riverpod, Dio, record package, audioplayers
+
+**Deliverables:** Flutter app, UI/UX documentation
+
+---
+
+### P5 - Admin Web Lead
+
+| Phase | Công việc cụ thể |
+|-------|-------------------|
+| Phase 1 | React project setup |
+| Phase 2 | Admin auth, member management |
+| Phase 3 | Song management, event management |
+| Phase 4 | Post management, voice profile view |
+| Phase 5 | Dashboard, statistics, polish |
+| Phase 6 | Final testing, documentation |
+
+**Technical Stack:** React 18+, TypeScript, React Router, Axios, Material UI / Ant Design
+
+**Deliverables:** React Admin Dashboard, Admin documentation
+
+---
+
+## 1.3. Ma trận trách nhiệm (RACI)
+
+| Task | P1 | P2 | P3 | P4 | P5 |
+|------|:--:|:--:|:--:|:--:|:--:|
+| System Architecture | A | C | C | C | C |
+| ERD Design | R | C | C | C | C |
+| API Contract | R | R | A | C | C |
+| F0 Research | C | R | I | I | I |
+| Python DSP | I | R | A | I | I |
+| Spring Boot API | C | C | R | I | I |
+| Flutter App | I | I | C | R | I |
+| React Admin | I | I | C | I | R |
+| Recommendation Engine | C | C | R | I | I |
+| Integration | A | C | C | C | C |
+| Mobile Audio Recording | I | C | I | R | I |
+| Admin Dashboard | I | I | C | I | R |
+| Database Migration | A | I | R | I | I |
+| Deployment | A | I | R | I | I |
+| User Authentication | C | I | R | I | I |
+| Event Management | I | I | R | C | C |
+| Song Management | I | I | R | C | C |
+| Post/Community | I | I | R | C | C |
+| Voice Profile Display | I | C | C | R | I |
+| F0 Accuracy Testing | A | R | I | I | I |
+| Recommendation Tuning | C | C | R | I | I |
+| Performance Optimization | C | C | R | I | I |
+| Security Hardening | A | I | R | I | I |
+| Report Writing | A | C | C | C | C |
+| Presentation Slides | A | C | C | C | C |
+
+**Legend:** R = Responsible, A = Accountable, C = Consulted, I = Informed
+
+---
+
+# PHẦN I.5: KIẾN TRÚC DATABASE HYBRID (SERVER + LOCAL)
+
+## 1.5.1. Tổng quan Kiến trúc
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         SERVER (MySQL)                                   │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐              │
+│  │  Users   │  │ Vocal    │  │  Songs  │  │  Events  │              │
+│  │          │  │ Profiles │  │          │  │          │              │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘              │
+│                                                                         │
+│  "Source of Truth" - Dữ liệu chung, cần BCN quản lý                  │
+└─────────────────────────────────────────────────────────────────────────┘
+                                   ▲
+                                   │ Sync (khi user bấm "Cập nhật")
+                                   │
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      LOCAL (SQLite - Mobile)                            │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐     │
+│  │ LocalPractice    │  │ CachedSongs      │  │ RecordingDrafts  │     │
+│  │ Sessions         │  │                  │  │                  │     │
+│  └──────────────────┘  └──────────────────┘  └──────────────────┘     │
+│                                                                         │
+│  "Cache & Private Data" - Chi tiết F0, nháp thu âm                   │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
-## 3.3. Nguyên tắc lưu audio
+## 1.5.2. Nguyên tắc phân chia dữ liệu
 
-MVP ưu tiên:
+| Tiêu chí | Server (MySQL) | Local (SQLite) |
+|----------|-----------------|----------------|
+| **Ai dùng?** | Tất cả (BCN + Thành viên) | Chỉ user đó |
+| ** Chia sẻ?** | ✅ Cần thiết | ❌ Không |
+| **Dung lượng** | Lớn (nhiều user) | Vừa đủ (1 user) |
+| **Tần suất truy cập** | Thường xuyên | Khi cần offline |
+| **Cần backup?** | ✅ Bắt buộc | ⚡ Tùy chọn |
+| **Tốc độ yêu cầu** | Realtime (API) | Tức thì (local) |
 
-- Audio chỉ lưu tạm để phân tích.
-- Không lưu file lâu dài nếu không cần.
-- Chỉ lưu metadata và kết quả phân tích.
-- Nếu cần lưu audio cho nghiên cứu, dùng thư mục local hoặc object storage ở giai đoạn sau.
+## 1.5.3. Bảng BẮT BUỘC trên Server (MySQL)
 
----
+### Danh sách bảng Server
 
-# 4. ERD đề xuất
+| Bảng | Mục đích | Tại sao cần Server |
+|------|----------|---------------------|
+| `users` | Thông tin tài khoản | Đăng nhập, xác thực |
+| `vocal_profiles` | Kết quả giọng hát TỔNG HỢP | BCN xếp bài, chia nhóm |
+| `songs` | Kho bài hát CLB | Chia sẻ cho tất cả thành viên |
+| `events` | Lịch sinh hoạt | Thông báo, điểm danh |
+| `event_registrations` | Đăng ký sự kiện | Quản lý chỗ |
+| `attendance` | Điểm danh | Chứng nhận tham gia |
+| `posts` | Bài viết cộng đồng | Chia sẻ kiến thức |
+| `song_ratings` | Đánh giá bài hát | Cộng đồng đóng góp |
+| `recommendation_logs` | Log gợi ý | Cải thiện thuật toán |
+| `audit_logs` | Nhật ký hành động | Bảo mật, theo dõi |
+| `system_settings` | Cấu hình hệ thống | Quản lý tập trung |
+| `genres` | Thể loại nhạc | Danh mục chuẩn |
+| `voice_types` | Loại giọng (6 loại) | Tra cứu chuẩn |
+| `voice_ranges` | Quãng giọng chuẩn | So sánh, phân loại |
 
-```mermaid
-erDiagram
-    USERS ||--o| VOICE_PROFILES : has
-    USERS ||--o{ EVENT_REGISTRATIONS : registers
-    EVENTS ||--o{ EVENT_REGISTRATIONS : contains
-    USERS ||--o{ POSTS : writes
-    USERS ||--o{ USER_GENRES : prefers
-    GENRES ||--o{ USER_GENRES : selected
-    GENRES ||--o{ SONGS : classifies
-    SONGS }o--|| VOICE_RANGES : targets
-    VOICE_RANGES ||--o{ SONGS : suitable_for
-    VOICE_PROFILES ||--o{ VOICE_ANALYSES : produces
-    USERS ||--o{ VOICE_ANALYSES : owns
+### Chi tiết bảng `vocal_profiles` (Server)
 
-    USERS {
-        bigint id PK
-        varchar email
-        varchar password_hash
-        varchar full_name
-        varchar role
-        datetime created_at
-    }
-
-    VOICE_PROFILES {
-        bigint id PK
-        bigint user_id FK
-        decimal min_f0
-        decimal max_f0
-        decimal min_midi
-        decimal max_midi
-        varchar voice_type
-        decimal confidence
-        datetime updated_at
-    }
-
-    VOICE_ANALYSES {
-        bigint id PK
-        bigint user_id FK
-        decimal min_f0
-        decimal max_f0
-        decimal median_f0
-        decimal confidence
-        varchar voice_type
-        datetime analyzed_at
-    }
-
-    SONGS {
-        bigint id PK
-        bigint genre_id FK
-        bigint voice_range_id FK
-        varchar title
-        varchar artist
-        varchar key_signature
-        int root_midi
-        varchar genre
-        int min_midi
-        int max_midi
-        varchar difficulty
-    }
-
-    VOICE_RANGES {
-        bigint id PK
-        varchar name
-        int min_midi
-        int max_midi
-        varchar description
-    }
-
-    GENRES {
-        bigint id PK
-        varchar name
-    }
-
-    USER_GENRES {
-        bigint user_id FK
-        bigint genre_id FK
-    }
-
-    EVENTS {
-        bigint id PK
-        varchar title
-        text description
-        datetime start_time
-        datetime end_time
-        varchar location
-        int capacity
-    }
-
-    EVENT_REGISTRATIONS {
-        bigint id PK
-        bigint user_id FK
-        bigint event_id FK
-        varchar status
-        datetime registered_at
-    }
-
-    POSTS {
-        bigint id PK
-        bigint user_id FK
-        varchar title
-        text content
-        datetime created_at
-    }
+```sql
+CREATE TABLE vocal_profiles (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL UNIQUE,
+    voice_type_id BIGINT,
+    voice_type VARCHAR(50),                    -- Tenor, Alto, Bass...
+    min_f0 DECIMAL(10,2),                      -- Hz thấp nhất đo được
+    max_f0 DECIMAL(10,2),                      -- Hz cao nhất đo được
+    min_midi INT,                              -- Quãng dưới (MIDI)
+    max_midi INT,                              -- Quãng trên (MIDI)
+    avg_f0 DECIMAL(10,2),                     -- F0 trung bình
+    median_f0 DECIMAL(10,2),                  -- F0 trung vị
+    range_semitones DECIMAL(6,2),            -- Quãng giọng (semitones)
+    confidence DECIMAL(4,3),                  -- Độ tin cậy (0-1)
+    stability_score DECIMAL(4,3),             -- Độ ổn định
+    quality_grade CHAR(1),                    -- Điểm chất lượng (A-F)
+    recommended_genres JSON,                  -- ["Pop", "Ballad"]
+    total_sessions INT DEFAULT 0,            -- Tổng số lần phân tích
+    last_analyzed_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (voice_type_id) REFERENCES voice_types(id) ON DELETE SET NULL,
+    INDEX idx_voice_type (voice_type),
+    INDEX idx_confidence (confidence)
+);
 ```
 
----
+### Chi tiết bảng `attendance` (Server)
 
-# 5. Phân công
-
-## Thành viên A — Backend & DSP/Algorithm Lead
-
-Chịu trách nhiệm:
-
-- Java/Spring Boot.
-- MySQL.
-- Python DSP/F₀.
-- Recommendation engine.
-- API integration architecture.
-- Admin Web.
-- Backend/algorithm documentation.
-- Experiment và evaluation.
-
-## Thành viên B — Mobile & UI/UX Lead
-
-Chịu trách nhiệm:
-
-- Flutter.
-- Recording/audio UI.
-- Mobile architecture.
-- REST integration.
-- Member experience.
-- UI/UX.
-- Mobile testing.
-- Mobile documentation.
-
-## Công việc chung
-
-- [ ] Thiết kế kiến trúc.
-- [ ] Review API.
-- [ ] Git/GitHub.
-- [ ] Integration testing.
-- [ ] Dataset/ground truth.
-- [ ] Demo.
-- [ ] Báo cáo.
-- [ ] Slide bảo vệ.
-
----
-
-# 6. Git/GitHub Workflow
-
-## Branch
-
-```text
-main
-develop
-feature/backend
-feature/dsp
-feature/admin
-feature/mobile
-feature/audio
-feature/recommendation
+```sql
+CREATE TABLE attendance (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    event_id BIGINT NOT NULL,
+    status ENUM('ATTENDED', 'ABSENT', 'LATE', 'EXCUSED') DEFAULT 'ABSENT',
+    check_in_time TIMESTAMP NULL,
+    check_out_time TIMESTAMP NULL,
+    notes TEXT,
+    recorded_by BIGINT,                        -- BCN điểm danh
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+    FOREIGN KEY (recorded_by) REFERENCES users(id) ON DELETE SET NULL,
+    UNIQUE KEY uk_user_event (user_id, event_id),
+    INDEX idx_event (event_id)
+);
 ```
 
-Khuyến nghị mỗi task tạo branch riêng:
+## 1.5.4. Bảng NÊN có trên Local (SQLite - Mobile)
 
-```text
-feature/A-f0-pipeline
-feature/A-song-api
-feature/B-record-audio
-feature/B-recommendation-ui
+### Danh sách bảng Local
+
+| Bảng | Mục đích | Tại sao Local |
+|------|----------|---------------|
+| `local_practice_sessions` | Lịch sử F0 chi tiết | Quá nhiều data (~hàng nghìn điểm/session) |
+| `cached_songs` | Lời + hợp âm offline | Xem khi mất wifi |
+| `recording_drafts` | File nháp đang xử lý | Chờ Python F0 extract |
+| `app_settings` | Cài đặt cá nhân | Nhanh, riêng tư |
+| `local_voice_analyses` | Bản phân tích CHƯA sync | Đang trong quá trình |
+
+### Chi tiết bảng `local_practice_sessions` (SQLite)
+
+```sql
+CREATE TABLE local_practice_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    session_type ENUM('WARMUP', 'FULL_SONG', 'SECTION', 'PITCH_CARE') DEFAULT 'FULL_SONG',
+    audio_local_path TEXT,                     -- Đường dẫn file .wav/.m4a
+    duration_seconds INT,
+    -- Chi tiết F0 (JSON array - hàng nghìn điểm)
+    raw_f0_data TEXT,                          -- [{"time": 0.0, "f0": 165.5}, ...]
+    pitch_accuracy_score DECIMAL(5,2),         -- Điểm chính xác pitch
+    rhythm_score DECIMAL(5,2),                 -- Điểm nhịp điệu
+    overall_score DECIMAL(5,2),                -- Điểm tổng
+    song_id INTEGER,                           -- NULL nếu không chọn bài
+    song_title VARCHAR(255),                   -- Lưu tạm để hiển thị
+    -- Chi tiết note distribution
+    note_distribution TEXT,                    -- {"C4": 15, "D4": 12, ...}
+    -- Cảnh báo chất lượng
+    quality_warnings TEXT,                    -- ["Too much noise", "Low volume"]
+    -- Sync status
+    is_synced INTEGER DEFAULT 0,              -- 0 = local only, 1 = synced to server
+    synced_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 ```
 
-## Quy tắc
+### Chi tiết bảng `cached_songs` (SQLite)
 
-- [ ] Không code trực tiếp trên `main`.
-- [ ] Pull `develop` trước khi bắt đầu task.
-- [ ] Commit nhỏ, có ý nghĩa.
-- [ ] Pull Request cho phần lớn tính năng.
-- [ ] A review phần backend/DSP.
-- [ ] B review phần Flutter/UI.
-- [ ] Merge vào `develop`.
-- [ ] `main` chỉ chứa phiên bản ổn định.
-- [ ] Tag milestone: `v0.1-research`, `v0.2-backend`, `v0.3-mvp`, `v1.0-final`.
-
-Commit mẫu:
-
-```text
-feat(dsp): add pyin pitch extraction
-feat(api): add song CRUD endpoints
-feat(mobile): add audio recording screen
-fix(dsp): remove unvoiced pitch frames
-docs(report): add F0 methodology
-test(recommendation): add range scoring tests
+```sql
+CREATE TABLE cached_songs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    server_song_id INTEGER,                    -- ID trên server (NULL nếu chỉ search local)
+    title VARCHAR(255) NOT NULL,
+    artist VARCHAR(255),
+    original_key VARCHAR(10),
+    min_midi INT,
+    max_midi INT,
+    difficulty VARCHAR(20),
+    -- Nội dung cache
+    lyrics TEXT,                               -- Lời bài hát
+    chords TEXT,                               -- Hợp âm (format: [Verse] Am G F...)
+    sheet_url TEXT,                            -- URL file sheet (offline storage)
+    -- Thông tin cache
+    cached_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_accessed_at TIMESTAMP,
+    access_count INTEGER DEFAULT 0,
+    is_favorite INTEGER DEFAULT 0
+);
 ```
 
----
-
-# 7. ROADMAP 100 NGÀY
-
----
-
-# PHASE 1 — NỀN TẢNG NGHIÊN CỨU & KIẾN TRÚC
-## Day 01 → Day 15
-
-### Day 01 — Kickoff
-
-**Mục tiêu:** Chốt scope và cách làm.
-
-**Công việc A**
-- [ ] Đọc lại đề tài và xác định câu hỏi nghiên cứu.
-- [ ] Xác định input/output của F₀ pipeline.
-- [ ] Tạo GitHub repository.
-- [ ] Tạo cấu trúc thư mục ban đầu.
-
-**Công việc B**
-- [ ] Xác định user journey Mobile.
-- [ ] Phác thảo các màn hình chính.
-- [ ] Tạo Flutter project.
-- [ ] Thiết lập Git branch.
-
-**Output**
-- [ ] Project charter.
-- [ ] Repository.
-- [ ] MVP scope.
-
-**Milestone:** Scope được hai người thống nhất.
-
----
-
-### Day 02 — Khảo sát F₀
-
-**Mục tiêu:** Hiểu F₀ và pitch.
-
-**A**
-- [ ] Nghiên cứu F₀, pitch, fundamental frequency.
-- [ ] Phân biệt F₀ và frequency spectrum.
-- [ ] Ghi chú cách F₀ biểu diễn giọng hát.
-
-**B**
-- [ ] Tìm hiểu audio recording trên mobile.
-- [ ] Nghiên cứu sample rate, mono/stereo, WAV/PCM.
-
-**Output**
-- [ ] Tài liệu lý thuyết F₀.
-- [ ] Audio specification.
-
----
-
-### Day 03 — Pitch Detection
-
-**A**
-- [ ] Nghiên cứu Autocorrelation.
-- [ ] Nghiên cứu YIN.
-- [ ] Nghiên cứu pYIN.
-- [ ] So sánh ưu/nhược điểm.
-
-**B**
-- [ ] Test package recording.
-- [ ] Xác định format audio tốt nhất cho pipeline.
-
-**Output**
-- [ ] Bảng so sánh thuật toán.
-
----
-
-### Day 04 — Chọn thư viện
-
-**A**
-- [ ] Prototype `librosa.yin`.
-- [ ] Prototype `librosa.pyin`.
-- [ ] Chọn pYIN làm baseline chính.
-- [ ] Ghi lại parameters.
-
-**B**
-- [ ] Prototype record audio.
-- [ ] Test file WAV.
-
-**Output**
-- [ ] Python experiment notebook/script.
-- [ ] Flutter recording prototype.
-
----
-
-### Day 05 — Dataset
-
-**A**
-- [ ] Tìm dataset giọng hát phù hợp.
-- [ ] Chọn dữ liệu có pitch/ground truth nếu có.
-- [ ] Xây tiêu chí dữ liệu thử nghiệm.
-
-**B**
-- [ ] Chuẩn bị 5–10 file test thực tế.
-- [ ] Quy định cách thu âm thống nhất.
-
-**Output**
-- [ ] Dataset v0.
-- [ ] Test protocol.
-
----
-
-### Day 06 — Signal Processing Theory
-
-**A**
-- [ ] Nghiên cứu sampling rate.
-- [ ] Nyquist theorem.
-- [ ] Windowing.
-- [ ] Frame length/hop length.
-
-**B**
-- [ ] Nghiên cứu microphone input.
-- [ ] Kiểm tra noise/clipping.
-
-**Output**
-- [ ] DSP notes.
-
----
-
-### Day 07 — Audio Preprocessing
-
-**A**
-- [ ] Implement mono conversion.
-- [ ] Resampling.
-- [ ] Normalization.
-- [ ] Silence/unvoiced filtering cơ bản.
-
-**B**
-- [ ] Chuẩn hóa recording settings.
-- [ ] Test nhiều thiết bị nếu có.
-
-**Output**
-- [ ] `preprocess.py`.
-
----
-
-### Day 08 — F₀ Baseline
-
-**A**
-- [ ] Implement pYIN.
-- [ ] Lưu F₀ theo frame.
-- [ ] Vẽ F₀ contour.
-- [ ] Log parameters.
-
-**B**
-- [ ] Thu test files.
-- [ ] Gửi audio cho A.
-
-**Output**
-- [ ] F₀ extraction v0.
-
----
-
-### Day 09 — YIN vs pYIN
-
-**A**
-- [ ] Chạy YIN.
-- [ ] Chạy pYIN.
-- [ ] So sánh kết quả.
-- [ ] Chọn phương pháp chính.
-
-**B**
-- [ ] Kiểm tra kết quả nghe/thực tế.
-- [ ] Ghi lỗi dễ nhận biết.
-
-**Output**
-- [ ] Experiment comparison.
-
----
-
-### Day 10 — F₀ Cleaning
-
-**A**
-- [ ] Loại NaN.
-- [ ] Loại pitch ngoài range.
-- [ ] Median filtering/smoothing.
-- [ ] Xử lý octave errors đơn giản.
-
-**B**
-- [ ] Test UI hiển thị pitch nếu có.
-
-**Output**
-- [ ] Clean F₀ pipeline.
-
----
-
-### Day 11 — Hz → Note
-
-**A**
-- [ ] Implement Hz → MIDI.
-- [ ] MIDI → note name.
-- [ ] Xác định reference A4=440Hz.
-- [ ] Test C4/A4.
-
-**B**
-- [ ] Thiết kế UI hiển thị note/range.
-
-**Output**
-- [ ] Note conversion module.
-
----
-
-### Day 12 — Vocal Range
-
-**A**
-- [ ] Xác định min/max pitch.
-- [ ] So sánh min/max raw với percentile.
-- [ ] Chọn phương pháp robust.
-- [ ] Định nghĩa usable vocal range.
-
-**B**
-- [ ] Thiết kế Voice Result Screen.
-
-**Output**
-- [ ] Vocal range specification.
-
----
-
-### Day 13 — Voice Type
-
-**A**
-- [ ] Nghiên cứu vùng giọng Soprano/Alto/Tenor/Bass.
-- [ ] Xây rule-based classifier.
-- [ ] Xử lý vùng giao nhau.
-
-**B**
-- [ ] Mockup voice type result.
-- [ ] Thiết kế confidence indicator.
-
-**Output**
-- [ ] Voice classification rule v0.
-
-> Không nên dùng ML để phân loại voice type ở giai đoạn này. Rule-based có thể giải thích được và phù hợp với đồ án 100 ngày.
-
----
-
-### Day 14 — Architecture & ERD
-
-**A**
-- [ ] Thiết kế ERD.
-- [ ] Thiết kế API boundary.
-- [ ] Thiết kế Python FastAPI service.
-
-**B**
-- [ ] Thiết kế Flutter architecture.
-- [ ] Thiết kế navigation.
-- [ ] Chuẩn hóa API response model.
-
-**Output**
-- [ ] ERD.
-- [ ] Architecture diagram.
-- [ ] API draft.
-
----
-
-### Day 15 — MILESTONE 1
-
-**A**
-- [ ] Chạy được audio → F₀ → note → range → voice type.
-
-**B**
-- [ ] Flutter chạy được recording/upload mock.
-
-**Chung**
-- [ ] Review scope.
-- [ ] Review research methodology.
-- [ ] Chốt API contract.
-
-**Milestone PASS khi:**
-- [ ] Có F₀ pipeline đầu tiên.
-- [ ] Có ERD.
-- [ ] Có kiến trúc.
-- [ ] Có dataset test.
-- [ ] Hai người chạy project độc lập được.
-
----
-
-# PHASE 2 — BACKEND & DATABASE
-## Day 16 → Day 35
-
-### Day 16 — Spring Boot Setup
-
-**A**
-- [ ] Tạo Spring Boot project.
-- [ ] Cấu hình Maven.
-- [ ] Spring Web.
-- [ ] Spring Data JPA.
-- [ ] Validation.
-- [ ] MySQL connector.
-
-**B**
-- [ ] Tạo Flutter architecture.
-- [ ] Tạo routing.
-- [ ] Tạo theme.
-- [ ] Tạo reusable widgets.
-
-**Output**
-- [ ] Backend chạy.
-- [ ] Mobile chạy.
-
----
-
-### Day 17 — MySQL
-
-**A**
-- [ ] Tạo database.
-- [ ] Tạo migration strategy.
-- [ ] Tạo Users.
-- [ ] Tạo Roles.
-- [ ] Tạo Genres.
-
-**B**
-- [ ] Tạo model Flutter cho User/Genre.
-
-**Output**
-- [ ] Database v1.
-
----
-
-### Day 18 — User API
-
-**A**
-- [ ] User entity.
-- [ ] Repository.
-- [ ] Service.
-- [ ] Controller.
-- [ ] DTO.
-- [ ] Validation.
-
-**B**
-- [ ] Login/Register screens.
-
-**Output**
-- [ ] User CRUD API.
-
----
-
-### Day 19 — Security
-
-**A**
-- [ ] Spring Security.
-- [ ] Password hashing.
-- [ ] JWT.
-- [ ] Role authorization.
-
-**B**
-- [ ] Form validation.
-- [ ] Token storage.
-- [ ] API client base.
-
-**Output**
-- [ ] Auth end-to-end.
-
----
-
-### Day 20 — Event
-
-**A**
-- [ ] Event entity.
-- [ ] CRUD.
-- [ ] Registration entity.
-- [ ] Registration API.
-
-**B**
-- [ ] Event list UI.
-- [ ] Event detail UI.
-
-**Output**
-- [ ] Event API.
-
----
-
-### Day 21 — Event Integration
-
-**A**
-- [ ] Authorization.
-- [ ] Capacity validation.
-- [ ] Duplicate registration prevention.
-
-**B**
-- [ ] Integrate event API.
-- [ ] Register/cancel UI.
-
-**Output**
-- [ ] Event feature integrated.
-
----
-
-### Day 22 — Song Schema
-
-**A**
-- [ ] Songs table.
-- [ ] Key signature.
-- [ ] Root MIDI.
-- [ ] Min/max MIDI.
-- [ ] Genre.
-- [ ] Difficulty.
-
-**B**
-- [ ] Song list screen.
-- [ ] Song detail screen.
-
-**Output**
-- [ ] Song database.
-
----
-
-### Day 23 — Song CRUD
-
-**A**
-- [ ] Song CRUD API.
-- [ ] Search.
-- [ ] Filter genre.
-- [ ] Filter voice range.
-
-**B**
-- [ ] Integrate song list.
-- [ ] Loading/error states.
-
-**Output**
-- [ ] Song API v1.
-
----
-
-### Day 24 — VoiceProfile
-
-**A**
-- [ ] VoiceProfile entity.
-- [ ] VoiceAnalysis entity.
-- [ ] Repository/service.
-
-**B**
-- [ ] Voice profile screen.
-- [ ] Empty state.
-
-**Output**
-- [ ] Voice profile API.
-
----
-
-### Day 25 — Posts
-
-**A**
-- [ ] Post entity.
-- [ ] CRUD.
-- [ ] Basic moderation fields.
-
-**B**
-- [ ] Feed screen.
-- [ ] Post detail.
-
-**Output**
-- [ ] Community API.
-
----
-
-### Day 26 — Admin APIs
-
-**A**
-- [ ] Admin member API.
-- [ ] Admin event API.
-- [ ] Admin song API.
-- [ ] Admin post API.
-
-**B**
-- [ ] Admin information architecture.
-- [ ] Wireframes.
-
-**Output**
-- [ ] Admin API set.
-
----
-
-### Day 27 — API Documentation
-
-**A**
-- [ ] OpenAPI/Swagger.
-- [ ] Document request/response.
-- [ ] Error format.
-
-**B**
-- [ ] Update Flutter API client.
-- [ ] Validate response handling.
-
-**Output**
-- [ ] API contract v1.
-
----
-
-### Day 28 — Backend Testing
-
-**A**
-- [ ] JUnit.
-- [ ] Service tests.
-- [ ] Controller tests.
-- [ ] Validation tests.
-
-**B**
-- [ ] Mobile API mock tests.
-
-**Output**
-- [ ] Backend test baseline.
-
----
-
-### Day 29 — Python API Setup
-
-**A**
-- [ ] FastAPI.
-- [ ] `/health`.
-- [ ] `/analyze`.
-- [ ] Multipart audio upload.
-- [ ] Pydantic response.
-
-**B**
-- [ ] Prepare Flutter upload service.
-
-**Output**
-- [ ] Python service online locally.
-
----
-
-### Day 30 — Python/Spring Integration
-
-**A**
-- [ ] Spring Boot gọi Python API.
-- [ ] Timeout.
-- [ ] Error handling.
-- [ ] Temporary file handling.
-
-**B**
-- [ ] Test upload từ Flutter qua Spring Boot.
-
-**Output**
-- [ ] End-to-end audio request.
-
----
-
-### Day 31 — Recommendation Schema
-
-**A**
-- [ ] Define recommendation score.
-- [ ] Define weights.
-- [ ] Define genre matching.
-- [ ] Define range matching.
-
-**B**
-- [ ] Design recommendation UI.
-
-**Output**
-- [ ] Recommendation specification.
-
----
-
-### Day 32 — Recommendation API
-
-**A**
-- [ ] Implement scoring.
-- [ ] Top-N songs.
-- [ ] Reason/explanation field.
-
-**B**
-- [ ] Recommendation card.
-
-**Output**
-- [ ] Recommendation API v0.
-
----
-
-### Day 33 — Seed Data
-
-**A**
-- [ ] Add sample songs.
-- [ ] Add genres.
-- [ ] Add voice ranges.
-- [ ] Add test users.
-
-**B**
-- [ ] Test UX with sample data.
-
-**Output**
-- [ ] Demo dataset.
-
----
-
-### Day 34 — Backend Hardening
-
-**A**
-- [ ] Exception handler.
-- [ ] Logging.
-- [ ] Input validation.
-- [ ] API security review.
-
-**B**
-- [ ] Mobile error handling.
-- [ ] Retry behavior.
-
-**Output**
-- [ ] Backend stable build.
-
----
-
-### Day 35 — MILESTONE 2
-
-**PASS khi:**
-- [ ] Spring Boot + MySQL chạy ổn.
-- [ ] JWT hoạt động.
-- [ ] CRUD core hoàn tất.
-- [ ] Python FastAPI nhận audio.
-- [ ] Spring gọi được Python.
-- [ ] Recommendation API chạy với data mẫu.
-
----
-
-# PHASE 3 — F₀, VOICE RANGE & RECOMMENDATION
-## Day 36 → Day 55
-
-### Day 36 — Experimental Protocol
-
-**A**
-- [ ] Định nghĩa ground truth.
-- [ ] Chọn metric.
-- [ ] Thiết kế test cases.
-
-**B**
-- [ ] Thu audio test chuẩn.
-- [ ] Ghi metadata: người, file, pitch kỳ vọng.
-
-**Output**
-- [ ] Evaluation protocol.
-
----
-
-### Day 37 — Pitch Parameter Tuning
-
-**A**
-- [ ] Test frame length.
-- [ ] Test hop length.
-- [ ] Test fmin/fmax.
-- [ ] Test voiced probability threshold.
-
-**B**
-- [ ] Thu thêm mẫu nếu thiếu.
-
-**Output**
-- [ ] Parameter table.
-
----
-
-### Day 38 — F₀ Accuracy
-
-**A**
-- [ ] Tính error theo cents/Hz.
-- [ ] Tính voiced/unvoiced errors.
-- [ ] Tạo bảng kết quả.
-
-**B**
-- [ ] Kiểm tra các trường hợp lỗi.
-
-**Output**
-- [ ] F₀ accuracy baseline.
-
----
-
-### Day 39 — Noise Testing
-
-**A**
-- [ ] Test noise.
-- [ ] Test silence.
-- [ ] Test background music.
-- [ ] Test low volume.
-
-**B**
-- [ ] Thu real-world samples.
-
-**Output**
-- [ ] Noise experiment.
-
----
-
-### Day 40 — Robustness
-
-**A**
-- [ ] Cải thiện preprocessing.
-- [ ] Filtering.
-- [ ] Outlier rejection.
-- [ ] Smoothing.
-
-**B**
-- [ ] UX cho trường hợp audio lỗi.
-
-**Output**
-- [ ] Robust pipeline.
-
----
-
-### Day 41 — Octave Error
-
-**A**
-- [ ] Xác định octave jump.
-- [ ] Implement heuristic correction.
-- [ ] Test trước/sau.
-
-**B**
-- [ ] Kiểm tra kết quả trên UI.
-
-**Output**
-- [ ] Octave handling.
-
----
-
-### Day 42 — Voice Range Algorithm
-
-**A**
-- [ ] So sánh min/max.
-- [ ] Percentile range.
-- [ ] Chọn usable range.
-- [ ] Document lý do.
-
-**B**
-- [ ] Thiết kế biểu đồ range.
-
-**Output**
-- [ ] Voice range v1.
-
----
-
-### Day 43 — Voice Type Classification
-
-**A**
-- [ ] Implement rule-based mapping.
-- [ ] Define overlap zones.
-- [ ] Confidence logic.
-
-**B**
-- [ ] Voice result UI.
-
-**Output**
-- [ ] Voice classifier v1.
-
----
-
-### Day 44 — Classification Evaluation
-
-**A**
-- [ ] Test voice labels.
-- [ ] Confusion matrix nếu đủ ground truth.
-- [ ] Ghi limitation.
-
-**B**
-- [ ] User-facing explanation.
-
-**Output**
-- [ ] Classification report.
-
----
-
-### Day 45 — F₀ API Finalization
-
-**A**
-- [ ] Chuẩn hóa JSON.
-- [ ] Return summary.
-- [ ] Return optional contour.
-- [ ] Return warnings.
-
-**B**
-- [ ] Parse JSON.
-- [ ] Map model.
-- [ ] UI state.
-
-**Output**
-- [ ] `/analyze` v1.
-
----
-
-### Day 46 — Recommendation Formula
-
-**A**
-- [ ] Thiết kế scoring:
-
-```text
-score =
-    w_range * range_match
-  + w_key   * key_match
-  + w_genre * genre_match
-  + w_diff  * difficulty_match
+### Chi tiết bảng `recording_drafts` (SQLite)
+
+```sql
+CREATE TABLE recording_drafts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    file_path TEXT NOT NULL,                   -- Đường dẫn local
+    file_size INTEGER,                          -- Bytes
+    duration_ms INTEGER,
+    mime_type VARCHAR(50),                     -- audio/wav, audio/mp4
+    -- Trạng thái xử lý
+    status ENUM('RECORDING', 'SAVED', 'PROCESSING', 'COMPLETED', 'FAILED') DEFAULT 'SAVED',
+    error_message TEXT,
+    -- Kết quả F0 (sau khi Python extract)
+    f0_result TEXT,                           -- JSON kết quả F0
+    analyzed_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 ```
 
-**B**
-- [ ] Hiển thị score/reason.
-
-**Output**
-- [ ] Recommendation formula.
-
----
-
-### Day 47 — Range Matching
-
-**A**
-- [ ] Tính overlap giữa user range và song range.
-- [ ] Penalize bài nằm ngoài range.
-- [ ] Test edge cases.
-
-**B**
-- [ ] UI biểu diễn độ phù hợp.
-
-**Output**
-- [ ] Range matcher.
-
----
-
-### Day 48 — Key Matching
-
-**A**
-- [ ] Define key compatibility.
-- [ ] Xác định tone gần/xa.
-- [ ] Cho phép transpose recommendation nếu phạm vi đề tài cho phép.
-
-**B**
-- [ ] Hiển thị tone bài hát.
-
-**Output**
-- [ ] Key matching.
-
----
-
-### Day 49 — Genre Matching
-
-**A**
-- [ ] Genre score.
-- [ ] User preference weight.
-
-**B**
-- [ ] Genre selection UI.
-
-**Output**
-- [ ] Genre preference.
-
----
-
-### Day 50 — Top-N Recommendation
-
-**A**
-- [ ] Sort score.
-- [ ] Top 5/10.
-- [ ] Remove duplicates.
-- [ ] Explanation.
-
-**B**
-- [ ] Recommendation page.
-
-**Output**
-- [ ] Recommendation engine v1.
-
----
-
-### Day 51 — Recommendation Evaluation
-
-**A**
-- [ ] Tạo test cases.
-- [ ] Precision@K nếu có ground truth phù hợp.
-- [ ] Coverage.
-- [ ] Manual relevance evaluation.
-
-**B**
-- [ ] Thử nghiệm với người dùng mẫu.
-
-**Output**
-- [ ] Recommendation evaluation.
-
----
-
-### Day 52 — Ablation Test
-
-**A**
-- [ ] So sánh:
-  - genre only
-  - range only
-  - range + genre
-  - range + genre + key
-
-**B**
-- [ ] Ghi nhận UX feedback.
-
-**Output**
-- [ ] Ablation table.
-
----
-
-### Day 53 — Optimize
-
-**A**
-- [ ] Tối ưu thời gian phân tích.
-- [ ] Cache metadata.
-- [ ] Giảm audio processing không cần thiết.
-
-**B**
-- [ ] Loading/progress.
-- [ ] Empty/error state.
-
-**Output**
-- [ ] Performance baseline.
-
----
-
-### Day 54 — Research Freeze
-
-**A**
-- [ ] Chốt thuật toán.
-- [ ] Chốt parameters.
-- [ ] Chốt metrics.
-- [ ] Chốt kết quả nghiên cứu.
-
-**B**
-- [ ] Chốt UX audio flow.
-
-**Output**
-- [ ] Research v1 frozen.
-
----
-
-### Day 55 — MILESTONE 3
-
-**PASS khi:**
-- [ ] Audio → F₀ thành công.
-- [ ] Có voice range.
-- [ ] Có voice type.
-- [ ] Có evaluation.
-- [ ] Recommendation có scoring rõ ràng.
-- [ ] Có bảng so sánh/ablation.
-
----
-
-# PHASE 4 — FLUTTER MOBILE & ADMIN WEB
-## Day 56 → Day 75
-
-### Day 56 — Mobile Architecture
-
-**B**
-- [ ] Chọn Provider/Riverpod.
-- [ ] API client.
-- [ ] Repository.
-- [ ] Models.
-- [ ] Navigation.
-
-**A**
-- [ ] Hỗ trợ API contract.
-
-**Output**
-- [ ] Flutter architecture.
-
----
-
-### Day 57 — Auth UI
-
-**B**
-- [ ] Login.
-- [ ] Register.
-- [ ] Logout.
-- [ ] Token storage.
-
-**A**
-- [ ] Verify auth API.
-
----
-
-### Day 58 — Home
-
-**B**
-- [ ] Home dashboard.
-- [ ] Upcoming events.
-- [ ] Recommendation preview.
-
-**A**
-- [ ] Home APIs.
-
----
-
-### Day 59 — Event Screens
-
-**B**
-- [ ] Event list.
-- [ ] Detail.
-- [ ] Registration.
-
-**A**
-- [ ] Fix event API issues.
-
----
-
-### Day 60 — Community
-
-**B**
-- [ ] Post list.
-- [ ] Post detail.
-- [ ] Basic refresh.
-
-**A**
-- [ ] Post API.
-
----
-
-### Day 61 — Audio Recording
-
-**B**
-- [ ] Recording UI.
-- [ ] Permission.
-- [ ] Start/stop.
-- [ ] Playback.
-
-**A**
-- [ ] Verify supported file formats.
-
----
-
-### Day 62 — Audio Upload
-
-**B**
-- [ ] Multipart upload.
-- [ ] Progress.
-- [ ] Cancel/error.
-
-**A**
-- [ ] Spring → Python integration.
-
----
-
-### Day 63 — Analysis Result
-
-**B**
-- [ ] Show min/max.
-- [ ] Show voice type.
-- [ ] Show confidence.
-- [ ] Show notes.
-
-**A**
-- [ ] Validate response.
-
----
-
-### Day 64 — Voice Profile
-
-**B**
-- [ ] Voice profile page.
-- [ ] History if available.
-
-**A**
-- [ ] Save latest profile.
-
----
-
-### Day 65 — Recommendation UI
-
-**B**
-- [ ] Recommendation list.
-- [ ] Song cards.
-- [ ] Genre filters.
-- [ ] Compatibility explanation.
-
-**A**
-- [ ] Recommendation endpoint.
-
----
-
-### Day 66 — Song Detail
-
-**B**
-- [ ] Song metadata.
-- [ ] Key.
-- [ ] Vocal range.
-- [ ] Genre.
-
-**A**
-- [ ] Song detail API.
-
----
-
-### Day 67 — Admin Setup
-
-**A**
-- [ ] React + TypeScript setup.
-- [ ] Admin routing.
-- [ ] API client.
-- [ ] Auth guard.
-
-**B**
-- [ ] Provide UX feedback.
-
----
-
-### Day 68 — Admin Members
-
-**A**
-- [ ] Member list.
-- [ ] Search/filter.
-- [ ] Role management.
-
-**B**
-- [ ] Review responsive layout.
-
----
-
-### Day 69 — Admin Events
-
-**A**
-- [ ] Event CRUD.
-- [ ] Registration management.
-
-**B**
-- [ ] Test API behavior.
-
----
-
-### Day 70 — Admin Songs
-
-**A**
-- [ ] Song CRUD.
-- [ ] Genre.
-- [ ] Key.
-- [ ] Range.
-
-**B**
-- [ ] Verify mobile displays correctly.
-
----
-
-### Day 71 — Admin Posts
-
-**A**
-- [ ] Post CRUD.
-- [ ] Hide/delete.
-
-**B**
-- [ ] Test mobile feed.
-
----
-
-### Day 72 — Admin Voice Profiles
-
-**A**
-- [ ] View analysis result.
-- [ ] Statistics cơ bản.
-
-**B**
-- [ ] UI feedback.
-
----
-
-### Day 73 — Dashboard
-
-**A**
-- [ ] Member count.
-- [ ] Event count.
-- [ ] Song count.
-- [ ] Analysis count.
-
-**B**
-- [ ] Check visual consistency.
-
----
-
-### Day 74 — UI Polish
-
-**B**
-- [ ] Responsive.
-- [ ] Loading.
-- [ ] Empty state.
-- [ ] Error state.
-- [ ] Accessibility cơ bản.
-
-**A**
-- [ ] API stability.
-
----
-
-### Day 75 — MILESTONE 4
-
-**PASS khi:**
-- [ ] User login.
-- [ ] Xem sự kiện.
-- [ ] Đăng ký.
-- [ ] Thu âm/upload.
-- [ ] Nhận voice range.
-- [ ] Nhận recommendation.
-- [ ] Admin CRUD được core data.
-- [ ] Mobile ↔ Spring ↔ Python ↔ MySQL chạy end-to-end.
-
----
-
-# PHASE 5 — INTEGRATION, TESTING & OPTIMIZATION
-## Day 76 → Day 90
-
-### Day 76 — Full Integration
-
-**A**
-- [ ] Test toàn bộ backend chain.
-
-**B**
-- [ ] Test toàn bộ mobile flow.
-
-**Chung**
-- [ ] Chạy scenario:
-  Login → Record → Analyze → Save → Recommend.
-
----
-
-### Day 77 — API Testing
-
-**A**
-- [ ] Postman collection.
-- [ ] Positive cases.
-- [ ] Negative cases.
-- [ ] Authentication cases.
-
-**B**
-- [ ] API integration tests.
-
----
-
-### Day 78 — Audio Testing
-
-**A**
-- [ ] Quiet voice.
-- [ ] Loud voice.
-- [ ] Low pitch.
-- [ ] High pitch.
-- [ ] Silence.
-- [ ] Noise.
-
-**B**
-- [ ] Mobile recording test.
-
----
-
-### Day 79 — Cross-device Testing
-
-**B**
-- [ ] Android device 1.
-- [ ] Android device 2 nếu có.
-- [ ] Different screen sizes.
-
-**A**
-- [ ] Backend compatibility.
-
----
-
-### Day 80 — Database Testing
-
-**A**
-- [ ] Constraints.
-- [ ] Foreign keys.
-- [ ] Duplicate data.
-- [ ] Indexes.
-- [ ] Transaction.
-
-**B**
-- [ ] Check UI after backend errors.
-
----
-
-### Day 81 — Security
-
-**A**
-- [ ] JWT expiration.
-- [ ] Role authorization.
-- [ ] Password hashing.
-- [ ] File upload validation.
-- [ ] Limit file size.
-
-**B**
-- [ ] Secure token storage.
-- [ ] Permission handling.
-
----
-
-### Day 82 — Performance
-
-**A**
-- [ ] Measure F₀ processing time.
-- [ ] Measure API latency.
-- [ ] Optimize unnecessary calls.
-
-**B**
-- [ ] Reduce UI rebuilds.
-- [ ] Optimize audio upload.
-
----
-
-### Day 83 — F₀ Optimization
-
-**A**
-- [ ] Compare parameters.
-- [ ] Re-run benchmark.
-- [ ] Select final configuration.
-
-**B**
-- [ ] Verify real-device behavior.
-
----
-
-### Day 84 — Recommendation Optimization
-
-**A**
-- [ ] Tune weights.
-- [ ] Compare recommendation variants.
-- [ ] Ensure explanation matches score.
-
-**B**
-- [ ] User test recommendations.
-
----
-
-### Day 85 — Failure Handling
-
-**A**
-- [ ] Python unavailable.
-- [ ] Invalid audio.
-- [ ] Timeout.
-- [ ] Empty pitch.
-- [ ] Database failure.
-
-**B**
-- [ ] Friendly error UI.
-- [ ] Retry.
-
----
-
-### Day 86 — End-to-End Regression
-
-**Chung**
-- [ ] Create regression checklist.
-- [ ] Re-test every MVP feature.
-- [ ] Record bugs.
-
----
-
-### Day 87 — Bug Fix Day
-
-**A**
-- [ ] Fix backend/DSP bugs.
-
-**B**
-- [ ] Fix mobile/UI bugs.
-
----
-
-### Day 88 — Demo Data
-
-**A**
-- [ ] Prepare final songs.
-- [ ] Prepare users.
-- [ ] Prepare events.
-- [ ] Prepare sample analyses.
-
-**B**
-- [ ] Prepare demo account.
-- [ ] Prepare demo flow.
-
----
-
-### Day 89 — Final Evaluation
-
-**A**
-- [ ] Run final F₀ evaluation.
-- [ ] Run recommendation evaluation.
-- [ ] Generate tables/charts.
-
-**B**
-- [ ] Run usability test.
-- [ ] Record feedback.
-
----
-
-### Day 90 — MILESTONE 5
-
-**PASS khi:**
-- [ ] Không còn blocker.
-- [ ] Full demo flow hoạt động.
-- [ ] Có benchmark.
-- [ ] Có F₀ evaluation.
-- [ ] Có recommendation evaluation.
-- [ ] Có danh sách limitation.
-
----
-
-# PHASE 6 — BÁO CÁO, ĐÓNG GÓI & BẢO VỆ
-## Day 91 → Day 100
-
-### Day 91 — Report Structure
-
-**A**
-- [ ] Viết Chương Tổng quan.
-- [ ] Viết Cơ sở lý thuyết F₀.
-- [ ] Viết phương pháp.
-
-**B**
-- [ ] Viết yêu cầu hệ thống.
-- [ ] Viết thiết kế Mobile/UI.
-
----
-
-### Day 92 — Research Chapter
-
-**A**
-- [ ] Viết YIN/pYIN.
-- [ ] Viết preprocessing.
-- [ ] Viết voice range.
-- [ ] Viết classification.
-
-**B**
-- [ ] Review hình minh họa.
-
----
-
-### Day 93 — System Chapter
-
-**A**
-- [ ] Viết architecture.
-- [ ] Viết ERD.
-- [ ] Viết REST API.
-- [ ] Viết security.
-
-**B**
-- [ ] Viết Flutter architecture.
-- [ ] Viết screen flow.
-
----
-
-### Day 94 — Experiment Chapter
-
-**A**
-- [ ] Viết dataset.
-- [ ] Viết metrics.
-- [ ] Viết experiment.
-- [ ] Viết kết quả.
-- [ ] Viết discussion.
-
-**B**
-- [ ] Viết usability/testing.
-
----
-
-### Day 95 — Results
-
-**A**
-- [ ] Tạo bảng F₀ accuracy.
-- [ ] Tạo bảng voice classification.
-- [ ] Tạo bảng recommendation.
-- [ ] Tạo biểu đồ.
-
-**B**
-- [ ] Chụp screenshot final UI.
-
----
-
-### Day 96 — Conclusion
-
-**A**
-- [ ] Viết limitations.
-- [ ] Future work.
-- [ ] Research conclusion.
-
-**B**
-- [ ] Tổng hợp user/system conclusion.
-
----
-
-### Day 97 — Final Documentation
-
-**Chung**
-- [ ] README.
-- [ ] Installation guide.
-- [ ] API guide.
-- [ ] Database setup.
-- [ ] Demo account.
-- [ ] Troubleshooting.
-
----
-
-### Day 98 — Final Demo
-
-**Chung**
-- [ ] Chạy demo từ đầu đến cuối.
-- [ ] Kiểm tra máy demo.
-- [ ] Backup source.
-- [ ] Backup database.
-- [ ] Backup report.
-
----
-
-### Day 99 — Slide & Defense
-
-**A**
-- [ ] Slide research.
-- [ ] Slide architecture.
-- [ ] Slide algorithm.
-- [ ] Slide evaluation.
-
-**B**
-- [ ] Slide mobile.
-- [ ] Slide UI/UX.
-- [ ] Demo flow.
-
-**Chung**
-- [ ] Chuẩn bị câu hỏi phản biện.
-- [ ] Tập thuyết trình.
-
----
-
-### Day 100 — FINAL MILESTONE
-
-**Chung**
-- [ ] Freeze source code.
-- [ ] Tag `v1.0-final`.
-- [ ] Verify build.
-- [ ] Verify database.
-- [ ] Verify demo.
-- [ ] Verify report.
-- [ ] Verify slides.
-- [ ] Backup tất cả.
-
-**PASS FINAL khi:**
-- [ ] MVP chạy end-to-end.
-- [ ] Research có phương pháp và kết quả đo.
-- [ ] Backend hoạt động.
-- [ ] Mobile hoạt động.
-- [ ] Admin hoạt động.
-- [ ] Báo cáo hoàn chỉnh.
-- [ ] Demo reproducible.
-
----
-
-# 8. Thiết kế thuật toán F₀ chi tiết
-
-## 8.1. Pipeline
-
-```text
-Audio
-  ↓
-Convert Mono
-  ↓
-Resample
-  ↓
-Normalize
-  ↓
-Frame
-  ↓
-pYIN
-  ↓
-Voiced Probability Filtering
-  ↓
-Remove Outliers
-  ↓
-Median / smoothing
-  ↓
-F₀ contour
-  ↓
-Hz → MIDI
-  ↓
-Percentile-based vocal range
-  ↓
-Voice type rule
+### Chi tiết bảng `app_settings` (SQLite)
+
+```sql
+CREATE TABLE app_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT,
+    type ENUM('STRING', 'INTEGER', 'BOOLEAN', 'JSON') DEFAULT 'STRING',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Default settings
+INSERT INTO app_settings (key, value, type) VALUES
+('language', 'vi', 'STRING'),
+('theme', 'system', 'STRING'),               -- light, dark, system
+('audio_input_device', 'default', 'STRING'),
+('noise_threshold', '30', 'INTEGER'),         -- dB threshold
+('min_recording_duration', '10', 'INTEGER'), -- seconds
+('max_recording_duration', '60', 'INTEGER'),
+('auto_detect_voice_type', 'true', 'BOOLEAN'),
+('show_pitch_visualizer', 'true', 'BOOLEAN'),
+('sync_wifi_only', 'true', 'BOOLEAN'),       -- Chỉ sync khi có WiFi
+('notifications_enabled', 'true', 'BOOLEAN');
 ```
 
-## 8.2. pYIN
+## 1.5.5. Luồng đồng bộ dữ liệu (Data Sync Flow)
 
-Ưu tiên:
-
-```python
-librosa.pyin(...)
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                         MOBILE APP (Flutter)                                  │
+│                                                                              │
+│  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐                  │
+│  │  Recording   │────▶│   Analyze    │────▶│    Save      │                  │
+│  │  Screen      │     │   (Python)   │     │   SQLite     │                  │
+│  └──────────────┘     └──────────────┘     └──────────────┘                  │
+│       │                                         │                             │
+│       │                                         │ Local (fast!)              │
+│       │                                         ▼                             │
+│       │                                 ┌──────────────┐                       │
+│       │                                 │  Detailed    │                       │
+│       │                                 │  F0 Data    │                       │
+│       │                                 │  (private)  │                       │
+│       │                                 └──────────────┘                       │
+│       │                                                                   │
+│       │ User bấm nút                                                        │
+│       ▼                                                                   │
+│  ┌──────────────┐                                                           │
+│  │  "Cập nhật  │                                                           │
+│  │   Hồ sơ"    │                                                           │
+│  └──────────────┘                                                           │
+│           │                                                                 │
+│           │ Sync (WiFi/4G)                                                  │
+│           ▼                                                                 │
+│  ┌──────────────────────────────────────────────────────────────────┐       │
+│  │                    SERVER API (POST /api/voice/sync)              │       │
+│  │  ┌────────────────────┐    ┌────────────────────┐                │       │
+│  │  │ Tổng hợp F0:       │    │ Cập nhật:          │                │       │
+│  │  │ - voice_type       │    │ - vocal_profiles   │                │       │
+│  │  │ - min/max_f0       │    │ - users.updated_at │                │       │
+│  │  │ - confidence       │    │                    │                │       │
+│  │  └────────────────────┘    └────────────────────┘                │       │
+│  └──────────────────────────────────────────────────────────────────┘       │
+│                                    │                                        │
+│                                    ▼                                        │
+│  ┌──────────────────────────────────────────────────────────────────┐       │
+│  │                      MySQL Server                                 │       │
+│  │  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐   │       │
+│  │  │ vocal_profiles │  │    users       │  │   songs        │   │       │
+│  │  │ (đã cập nhật)  │  │                │  │                │   │       │
+│  │  └────────────────┘  └────────────────┘  └────────────────┘   │       │
+│  └──────────────────────────────────────────────────────────────────┘       │
+│                                    │                                        │
+│                                    ▼                                        │
+│  ┌──────────────────────────────────────────────────────────────────┐       │
+│  │                    ADMIN WEB (BCN)                                 │       │
+│  │  "Xem danh sách quãng giọng thành viên"                           │       │
+│  │  ┌─────────┬─────────┬─────────┬─────────┬─────────┐               │       │
+│  │  │  Tên    │Loại giọng│Quãng   │Lần cuối │  Trạng  │               │       │
+│  │  │         │         │giọng   │  tập    │  thái   │               │       │
+│  │  ├─────────┼─────────┼─────────┼─────────┼─────────┤               │       │
+│  │  │ Nguyễn A│ TENOR   │C3 - G4 │ 2 ngày  │ ✓ OK   │               │       │
+│  │  │ Trần B  │ ALTO    │F3 - D5 │ 5 ngày  │ ⚠ Cần  │               │       │
+│  │  │         │         │        │         │ cập    │               │       │
+│  │  │         │         │        │         │ nhật   │               │       │
+│  │  └─────────┴─────────┴─────────┴─────────┴─────────┘               │       │
+│  └──────────────────────────────────────────────────────────────────┘       │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Tham số cần thử nghiệm:
+## 1.5.6. API Endpoints cho Sync
 
-- `fmin`
-- `fmax`
-- `frame_length`
-- `hop_length`
-- `sr`
-- voiced probability threshold
+### POST /api/voice/sync - Đồng bộ kết quả lên Server
 
-Không được chỉ chọn tham số "vì chạy được". Phải có bảng thử nghiệm và giải thích lựa chọn.
-
-## 8.3. F₀ → MIDI
-
-```text
-midi = 69 + 12 * log2(f0 / 440)
-```
-
-Sau đó:
-
-```text
-MIDI → nearest semitone → note
-```
-
-## 8.4. Vocal range
-
-Không nên dùng duy nhất:
-
-```text
-min(F0), max(F0)
-```
-
-Vì một frame lỗi có thể làm range sai.
-
-Ưu tiên:
-
-```text
-usable F0 frames
-        ↓
-remove outliers
-        ↓
-lower percentile
-upper percentile
-        ↓
-usable vocal range
-```
-
-Ví dụ có thể bắt đầu thử:
-
-```text
-P5 → lower bound
-P95 → upper bound
-```
-
-Sau đó đánh giá xem percentile nào phù hợp với dataset.
-
----
-
-# 9. Voice Type Classification
-
-## MVP
-
-Dùng **rule-based classification**.
-
-Ví dụ khái niệm:
-
-```text
-                    Pitch Range
-                         |
-             +-----------+-----------+
-             |                       |
-         Lower range              Higher range
-             |                       |
-          Bass/Tenor             Alto/Soprano
-```
-
-Nhưng các vùng này **không nên được hard-code như chân lý tuyệt đối**.
-
-Trong báo cáo phải ghi:
-
-- Vocal classification phụ thuộc nhiều yếu tố.
-- Voice type chuyên nghiệp không chỉ dựa trên min/max F₀.
-- Đồ án sử dụng range-based heuristic.
-- Đây là limitation của MVP.
-- Future work có thể dùng dataset được gán nhãn và ML.
-
----
-
-# 10. Recommendation Algorithm
-
-## 10.1. Input
-
-```text
-User:
-- voice_min_midi
-- voice_max_midi
-- preferred_genres
-- optional difficulty
-
-Song:
-- min_midi
-- max_midi
-- key
-- genre
-- difficulty
-```
-
-## 10.2. Range score
-
-```text
-overlap =
-intersection(user_range, song_range)
-/
-song_range
-```
-
-Sau đó giới hạn:
-
-```text
-0 ≤ range_score ≤ 1
-```
-
-## 10.3. Genre score
-
-```text
-genre_score = 1 nếu match
-genre_score = 0 nếu không match
-```
-
-Có thể mở rộng sau.
-
-## 10.4. Tổng điểm
-
-Ví dụ ban đầu:
-
-```text
-score =
-0.60 * range_score
-+ 0.25 * genre_score
-+ 0.10 * key_score
-+ 0.05 * difficulty_score
-```
-
-Các weight này **phải được đánh giá**, không trình bày như giá trị khoa học tuyệt đối.
-
-## 10.5. Explanation
-
-Mỗi recommendation nên trả:
-
+**Request:**
 ```json
 {
-  "song": "Example Song",
-  "score": 0.87,
-  "reasons": [
-    "Vocal range phù hợp",
-    "Đúng thể loại yêu thích",
-    "Tone tương đối phù hợp"
+  "userId": 123,
+  "sessionSummary": {
+    "totalSessionsAnalyzed": 15,
+    "latestVoiceType": "TENOR",
+    "minF0": 130.0,
+    "maxF0": 392.0,
+    "minMidi": 48,
+    "maxMidi": 67,
+    "avgF0": 245.5,
+    "medianF0": 240.0,
+    "rangeSemitones": 19.0,
+    "confidence": 0.85,
+    "stabilityScore": 0.78,
+    "qualityGrade": "B",
+    "recommendedGenres": ["Pop", "Rock", "Ballad"],
+    "lastSessionAt": "2026-09-04T10:30:00Z"
+  },
+  "localSessionIds": [101, 102, 103, 104, 105],  // IDs đã sync
+  "newSessions": [
+    {
+      "localId": 106,
+      "sessionType": "FULL_SONG",
+      "songId": 45,
+      "avgF0": 238.5,
+      "pitchAccuracy": 82.5,
+      "durationSeconds": 180
+    }
   ]
 }
 ```
 
-Điều này làm recommendation dễ giải thích và phù hợp đồ án nghiên cứu ứng dụng.
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "profileUpdated": true,
+    "newProfile": {
+      "voiceType": "TENOR",
+      "confidence": 0.87,
+      "totalSessions": 16,
+      "lastAnalyzedAt": "2026-09-04T10:30:00Z"
+    },
+    "syncedSessionIds": [101, 102, 103, 104, 105, 106]
+  }
+}
+```
+
+### GET /api/voice/profile/{userId} - Lấy hồ sơ (cho BCN)
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "userId": 123,
+    "userName": "Nguyễn Văn A",
+    "voiceType": "TENOR",
+    "voiceTypeId": 4,
+    "vocalRange": {
+      "minF0": 130.0,
+      "maxF0": 392.0,
+      "minMidi": 48,
+      "maxMidi": 67,
+      "displayNote": "C3 - G4"
+    },
+    "confidence": 0.87,
+    "stabilityScore": 0.78,
+    "qualityGrade": "B",
+    "recommendedGenres": ["Pop", "Rock", "Ballad"],
+    "totalSessions": 16,
+    "lastAnalyzedAt": "2026-09-04T10:30:00Z",
+    "isOutdated": false
+  }
+}
+```
+
+## 1.5.7. Chiến lược Offline-First
+
+```
+┌─────────────────────────────────────────────────────────┐
+│              OFFLINE-FIRST STRATEGY                     │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  1️⃣ LUÔN ghi vào SQLite TRƯỚC                         │
+│     → App không bị chặn bởi network                     │
+│     → User thấy app "mượt" ngay                         │
+│                                                         │
+│  2️⃣ SYNC khi có điều kiện                              │
+│     → Có WiFi (configurable)                            │
+│     → Pin > 20% (tránh xả pin)                         │
+│     → Không đang xử lý audio                           │
+│                                                         │
+│  3️⃣ CONFLICT RESOLUTION                                 │
+│     → Server luôn là "source of truth"                  │
+│     → Nếu conflict: Server wins                         │
+│     → Log conflict để debug                             │
+│                                                         │
+│  4️⃣ BACKGROUND SYNC                                    │
+│     → Dùng WorkManager (Android)                        │
+│     → BackgroundTasks (iOS)                             │
+│     → Sync khi app minimize                            │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+## 1.5.8. So sánh: Trước vs Sau khi tách SQLite
+
+| Khía cạnh | TRƯỚC (MySQL only) | SAU (Hybrid) |
+|-----------|---------------------|--------------|
+| **Dung lượng Server** | ~500MB (F0 logs) | ~50MB |
+| **Tốc độ xử lý** | Phụ thuộc mạng | Tức thì (local) |
+| **Offline** | ❌ Không | ✅ Có |
+| **BCN xem F0 chi tiết** | ✅ Có | ❌ Không (chỉ tổng hợp) |
+| **User xem lịch sử F0** | ✅ Có | ✅ Có (local) |
+| **Độ phức tạp code** | Thấp | Trung bình |
+| **Chi phí Server** | Cao | Thấp |
 
 ---
 
-# 11. API đề xuất
+# PHẦN II: THIẾT KẾ DATABASE
 
-## Authentication
+## 2.1. ERD Hoàn chỉnh
 
-```text
-POST /api/auth/register
-POST /api/auth/login
+```mermaid
+erDiagram
+    USERS ||--o{ VOICE_PROFILES : has
+    USERS ||--o{ VOICE_ANALYSES : owns
+    USERS ||--o{ EVENT_REGISTRATIONS : registers
+    USERS ||--o{ USER_GENRES : prefers
+    USERS ||--o{ USER_SONGS : favorites
+    USERS ||--o{ POSTS : writes
+    USERS ||--o{ POST_COMMENTS : comments
+    USERS ||--o{ NOTIFICATIONS : receives
+    USERS ||--o{ AUDIO_SAMPLES : uploads
+    USERS ||--o{ USER_EXERCISES : exercises
+    USERS ||--o{ PRACTICE_SESSIONS : practices
+    USERS ||--o{ RECOMMENDATION_LOGS : recommendations
+    USERS ||--o{ AUDIT_LOGS : actions
+    USERS ||--o{ FILE_UPLOADS : files
+    USERS ||--o{ API_TOKENS : api_keys
+    
+    EVENTS ||--o{ EVENT_REGISTRATIONS : contains
+    EVENTS ||--o{ EVENT_ATTACHMENTS : has
+    EVENTS ||--o{ POSTS : related
+    
+    POSTS ||--o{ POST_COMMENTS : has
+    POSTS ||--o{ POST_LIKES : receives
+    POSTS ||--o{ POST_TAGS : tagged
+    
+    GENRES ||--o{ USER_GENRES : selected_by
+    GENRES ||--o{ SONGS : classifies
+    GENRES ||--o{ SONG_GENRES : song_classification
+    
+    SONGS ||--o{ USER_SONGS : favorited_by
+    SONGS ||--o{ SONG_GENRES : genres
+    SONGS ||--o{ SONG_KEYS : keys
+    SONGS ||--o{ SONG_RATINGS : rated_by
+    SONGS ||--o{ PRACTICE_SESSIONS : practiced
+    
+    VOICE_TYPES ||--o{ VOICE_TYPE_RANGES : range_for
+    VOICE_TYPES ||--o{ VOICE_PROFILES : assigned_to
+    VOICE_TYPES ||--o{ EXERCISES : target
+    
+    VOICE_RANGES ||--o{ VOICE_TYPE_RANGES : defines
+    
+    VOICE_PROFILES ||--o{ VOICE_ANALYSES : contains
+    
+    AUDIO_SAMPLES ||--o{ VOICE_ANALYSES : analyzed_as
+    
+    ANALYSIS_SESSIONS ||--o{ VOICE_ANALYSES : contains
+    ANALYSIS_SESSIONS ||--o{ AUDIO_SAMPLES : contains
+    
+    EXERCISES ||--o{ USER_EXERCISES : progress
+    
+    CHOIR_GROUPS ||--o{ CHOIR_MEMBERS : has
+    CHOIR_GROUPS }o--|| USERS : led_by
+    CHOIR_MEMBERS }o--|| USERS : member
+    
+    SYSTEM_SETTINGS ||--|| USERS : default_admin
 ```
 
-## Users
+## 2.2. SQL Schema (Tất cả bảng - Không lặp)
 
-```text
-GET    /api/users/me
-GET    /api/users
-PUT    /api/users/{id}
+### Bảng USERS
+
+```sql
+CREATE TABLE users (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    full_name VARCHAR(200) NOT NULL,
+    phone VARCHAR(20),
+    avatar_url VARCHAR(500),
+    role ENUM('MEMBER', 'ADMIN', 'MODERATOR') DEFAULT 'MEMBER',
+    status ENUM('ACTIVE', 'INACTIVE', 'BANNED') DEFAULT 'ACTIVE',
+    date_of_birth DATE,
+    gender ENUM('MALE', 'FEMALE', 'OTHER') DEFAULT 'OTHER',
+    email_verified_at TIMESTAMP NULL,
+    last_login_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    
+    INDEX idx_email (email),
+    INDEX idx_username (username),
+    INDEX idx_role (role),
+    INDEX idx_status (status),
+    INDEX idx_role_status (role, status)
+);
 ```
 
-## Voice
+### Bảng VOICE_TYPES
 
-```text
-POST /api/voice/analyze
-GET  /api/voice/profile
-GET  /api/voice/history
+```sql
+CREATE TABLE voice_types (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    category ENUM('HIGH', 'MIDDLE', 'LOW') DEFAULT 'MIDDLE',
+    sort_order INT DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    INDEX idx_category (category),
+    INDEX idx_active (is_active)
+);
 ```
 
-## Songs
+### Bảng VOICE_RANGES
 
-```text
-GET    /api/songs
-GET    /api/songs/{id}
-POST   /api/songs
-PUT    /api/songs/{id}
-DELETE /api/songs/{id}
+```sql
+CREATE TABLE voice_ranges (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(50) UNIQUE,
+    min_midi INT NOT NULL,
+    max_midi INT NOT NULL,
+    description TEXT,
+    difficulty_level ENUM('EASY', 'MEDIUM', 'HARD', 'EXPERT') DEFAULT 'MEDIUM',
+    song_count INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    INDEX idx_midi_range (min_midi, max_midi)
+);
 ```
 
-## Recommendation
+### Bảng VOICE_TYPE_RANGES
 
-```text
-GET /api/recommendations
-GET /api/recommendations?genre=pop
+```sql
+CREATE TABLE voice_type_ranges (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    voice_type_id BIGINT NOT NULL,
+    voice_range_id BIGINT NOT NULL,
+    -- MIDI values are integers (note numbers 0-127)
+    typical_min_midi INT,                      -- e.g., 48 (C3)
+    typical_max_midi INT,                      -- e.g., 72 (C5)
+    lower_boundary_midi INT,                    -- Lowest comfortable note
+    upper_boundary_midi INT,                    -- Highest comfortable note
+    description VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (voice_type_id) REFERENCES voice_types(id) ON DELETE CASCADE,
+    FOREIGN KEY (voice_range_id) REFERENCES voice_ranges(id) ON DELETE CASCADE,
+    UNIQUE KEY uk_type_range (voice_type_id, voice_range_id)
+);
 ```
 
-## Events
+### Bảng VOICE_PROFILES
 
-```text
-GET  /api/events
-POST /api/events/{id}/register
-DELETE /api/events/{id}/register
+```sql
+CREATE TABLE voice_profiles (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL UNIQUE,
+    voice_type_id BIGINT,
+    voice_type VARCHAR(50),
+    min_f0 DECIMAL(10,2),
+    max_f0 DECIMAL(10,2),
+    avg_f0 DECIMAL(10,2),
+    median_f0 DECIMAL(10,2),
+    min_midi INT,
+    max_midi INT,
+    median_midi INT,
+    range_semitones DECIMAL(6,2),
+    confidence DECIMAL(4,3),
+    stability_score DECIMAL(4,3),
+    quality_grade CHAR(1),
+    metadata JSON,
+    analyzed_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (voice_type_id) REFERENCES voice_types(id) ON DELETE SET NULL,
+    INDEX idx_voice_type (voice_type),
+    INDEX idx_confidence (confidence)
+);
 ```
 
-## Posts
+### Bảng AUDIO_SAMPLES
 
-```text
-GET  /api/posts
-POST /api/posts
-PUT /api/posts/{id}
-DELETE /api/posts/{id}
+```sql
+CREATE TABLE audio_samples (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    file_name VARCHAR(255),
+    file_path VARCHAR(500),
+    file_url VARCHAR(500),
+    file_size BIGINT,
+    mime_type VARCHAR(100),
+    duration_ms INT,
+    sample_rate INT,
+    channels ENUM('MONO', 'STEREO') DEFAULT 'MONO',
+    audio_quality ENUM('LOW', 'MEDIUM', 'HIGH') DEFAULT 'MEDIUM',
+    processing_status ENUM('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED') DEFAULT 'PENDING',
+    waveform_data JSON,
+    recorded_at TIMESTAMP,
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_samples (user_id, created_at),
+    INDEX idx_status (processing_status)
+);
+```
+
+### Bảng ANALYSIS_SESSIONS
+
+```sql
+CREATE TABLE analysis_sessions (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    session_type ENUM('SINGLE', 'SERIES', 'COMPARISON') DEFAULT 'SINGLE',
+    sample_count INT DEFAULT 0,
+    overall_confidence DECIMAL(4,3),
+    overall_voice_type VARCHAR(50),
+    session_summary JSON,
+    started_at TIMESTAMP,
+    ended_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_sessions (user_id, created_at)
+);
+```
+
+### Bảng VOICE_ANALYSES
+
+```sql
+CREATE TABLE voice_analyses (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    voice_profile_id BIGINT,
+    audio_sample_id BIGINT,
+    session_id BIGINT,
+    min_f0 DECIMAL(10,2),
+    max_f0 DECIMAL(10,2),
+    avg_f0 DECIMAL(10,2),
+    median_f0 DECIMAL(10,2),
+    std_f0 DECIMAL(10,4),
+    min_midi DECIMAL(6,2),
+    max_midi DECIMAL(6,2),
+    median_midi DECIMAL(6,2),
+    voice_type VARCHAR(50),
+    confidence DECIMAL(4,3),
+    voiced_ratio DECIMAL(5,4),
+    octave_score DECIMAL(5,4),
+    f0_contour JSON,
+    note_distribution JSON,
+    analysis_params JSON,
+    quality_warning VARCHAR(255),
+    analyzed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (voice_profile_id) REFERENCES voice_profiles(id) ON DELETE SET NULL,
+    FOREIGN KEY (audio_sample_id) REFERENCES audio_samples(id) ON DELETE SET NULL,
+    FOREIGN KEY (session_id) REFERENCES analysis_sessions(id) ON DELETE SET NULL,
+    INDEX idx_user_analyzed (user_id, analyzed_at),
+    INDEX idx_voice_type (voice_type)
+);
+```
+
+### Bảng GENRES
+
+```sql
+CREATE TABLE genres (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    description TEXT,
+    icon VARCHAR(100),
+    color VARCHAR(7),
+    sort_order INT DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    song_count INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    INDEX idx_code (code),
+    INDEX idx_active (is_active)
+);
+```
+
+### Bảng SONGS
+
+```sql
+CREATE TABLE songs (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    added_by BIGINT,
+    title VARCHAR(255) NOT NULL,
+    artist VARCHAR(255),
+    album VARCHAR(255),
+    original_key VARCHAR(10),
+    original_root_midi INT,
+    difficulty ENUM('BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT') DEFAULT 'INTERMEDIATE',
+    duration_seconds INT,
+    lyrics_preview TEXT,
+    vocal_intensity ENUM('LIGHT', 'MEDIUM', 'STRONG') DEFAULT 'MEDIUM',
+    tempo_category ENUM('SLOW', 'MODERATE', 'FAST') DEFAULT 'MODERATE',
+    min_midi INT,
+    max_midi INT,
+    comfortable_min_midi INT,
+    comfortable_max_midi INT,
+    range_semitones DECIMAL(6,2),
+    is_active BOOLEAN DEFAULT TRUE,
+    view_count INT DEFAULT 0,
+    favorite_count INT DEFAULT 0,
+    avg_rating DECIMAL(3,2) DEFAULT 0.00,
+    rating_count INT DEFAULT 0,
+    additional_metadata JSON,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (added_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_title (title),
+    INDEX idx_artist (artist),
+    INDEX idx_difficulty (difficulty),
+    INDEX idx_original_key (original_key),
+    INDEX idx_min_midi (min_midi),
+    INDEX idx_max_midi (max_midi),
+    INDEX idx_active (is_active),
+    INDEX idx_midi_range (min_midi, max_midi),
+    
+    FULLTEXT INDEX ft_songs (title, artist, lyrics_preview)
+);
+```
+
+### Bảng SONG_GENRES
+
+```sql
+CREATE TABLE song_genres (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    song_id BIGINT NOT NULL,
+    genre_id BIGINT NOT NULL,
+    is_primary BOOLEAN DEFAULT FALSE,
+    weight DECIMAL(3,2) DEFAULT 1.00,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (song_id) REFERENCES songs(id) ON DELETE CASCADE,
+    FOREIGN KEY (genre_id) REFERENCES genres(id) ON DELETE CASCADE,
+    UNIQUE KEY uk_song_genre (song_id, genre_id),
+    INDEX idx_song (song_id),
+    INDEX idx_genre (genre_id),
+    INDEX idx_genre_song (genre_id, song_id)
+);
+```
+
+### Bảng SONG_KEYS
+
+```sql
+CREATE TABLE song_keys (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    song_id BIGINT NOT NULL,
+    key_signature VARCHAR(10),
+    mode ENUM('MAJOR', 'MINOR', 'MODAL') DEFAULT 'MAJOR',
+    difficulty_for_key VARCHAR(50),
+    is_recommended_key BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (song_id) REFERENCES songs(id) ON DELETE CASCADE,
+    INDEX idx_song (song_id)
+);
+```
+
+### Bảng SONG_RATINGS
+
+```sql
+CREATE TABLE song_ratings (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    song_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    rating INT CHECK (rating >= 1 AND rating <= 5),
+    comment TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (song_id) REFERENCES songs(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY uk_song_user (song_id, user_id),
+    INDEX idx_song (song_id)
+);
+```
+
+### Bảng USER_GENRES
+
+```sql
+CREATE TABLE user_genres (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    genre_id BIGINT NOT NULL,
+    preference_level INT DEFAULT 3 CHECK (preference_level BETWEEN 1 AND 5),
+    is_favorite BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (genre_id) REFERENCES genres(id) ON DELETE CASCADE,
+    UNIQUE KEY uk_user_genre (user_id, genre_id),
+    INDEX idx_user (user_id),
+    INDEX idx_user_genre (user_id, genre_id)
+);
+```
+
+### Bảng USER_SONGS
+
+```sql
+CREATE TABLE user_songs (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    song_id BIGINT NOT NULL,
+    status ENUM('FAVORITE', 'PLAYED', 'LEARNING', 'MASTERED') DEFAULT 'FAVORITE',
+    play_count INT DEFAULT 0,
+    practice_notes TEXT,
+    favorited_at TIMESTAMP NULL,
+    last_played_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (song_id) REFERENCES songs(id) ON DELETE CASCADE,
+    UNIQUE KEY uk_user_song (user_id, song_id),
+    INDEX idx_user_status (user_id, status)
+);
+```
+
+### Bảng EVENTS
+
+```sql
+CREATE TABLE events (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    organizer_id BIGINT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    content TEXT,
+    event_type ENUM('PRACTICE', 'PERFORMANCE', 'COMPETITION', 'WORKSHOP') DEFAULT 'PRACTICE',
+    start_time TIMESTAMP NOT NULL,
+    end_time TIMESTAMP NOT NULL,
+    location VARCHAR(255),
+    location_detail VARCHAR(255),
+    location_link VARCHAR(500),
+    capacity INT DEFAULT 0,
+    registered_count INT DEFAULT 0,
+    waitlist_count INT DEFAULT 0,
+    registration_deadline TIMESTAMP,
+    status ENUM('DRAFT', 'PUBLISHED', 'CANCELLED', 'COMPLETED') DEFAULT 'DRAFT',
+    cover_image_url VARCHAR(500),
+    attachments JSON,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (organizer_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_start_time (start_time),
+    INDEX idx_status (status),
+    INDEX idx_type (event_type),
+    INDEX idx_upcoming (start_time, status)
+);
+```
+
+### Bảng EVENT_ATTACHMENTS
+
+```sql
+CREATE TABLE event_attachments (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    event_id BIGINT NOT NULL,
+    file_name VARCHAR(255),
+    file_url VARCHAR(500),
+    file_type ENUM('PDF', 'IMAGE', 'VIDEO', 'DOCUMENT') DEFAULT 'DOCUMENT',
+    file_size BIGINT,
+    description VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+    INDEX idx_event (event_id)
+);
+```
+
+### Bảng EVENT_REGISTRATIONS
+
+```sql
+CREATE TABLE event_registrations (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    event_id BIGINT NOT NULL,
+    status ENUM('REGISTERED', 'WAITLIST', 'CANCELLED', 'ATTENDED', 'NO_SHOW') DEFAULT 'REGISTERED',
+    registration_type ENUM('FREE', 'PAID', 'INVITATION') DEFAULT 'FREE',
+    registration_fee DECIMAL(10,2) DEFAULT 0.00,
+    payment_status ENUM('PENDING', 'COMPLETED', 'REFUNDED') DEFAULT 'PENDING',
+    payment_method VARCHAR(50),
+    ticket_code VARCHAR(50) UNIQUE,
+    registration_data JSON,
+    check_in_time TIMESTAMP NULL,
+    notes TEXT,
+    registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+    UNIQUE KEY uk_user_event (user_id, event_id),
+    INDEX idx_event_status (event_id, status),
+    INDEX idx_ticket (ticket_code),
+    INDEX idx_event_user (event_id, user_id)
+);
+```
+
+### Bảng POSTS
+
+```sql
+CREATE TABLE posts (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    author_id BIGINT NOT NULL,
+    event_id BIGINT,
+    title VARCHAR(255),
+    content TEXT NOT NULL,
+    content_summary TEXT,
+    post_type ENUM('ANNOUNCEMENT', 'NEWS', 'TIP', 'DISCUSSION', 'EVENT_REVIEW') DEFAULT 'ANNOUNCEMENT',
+    status ENUM('DRAFT', 'PUBLISHED', 'HIDDEN', 'DELETED') DEFAULT 'DRAFT',
+    visibility ENUM('PUBLIC', 'MEMBERS', 'ADMINS') DEFAULT 'MEMBERS',
+    cover_image_url VARCHAR(500),
+    view_count INT DEFAULT 0,
+    comment_count INT DEFAULT 0,
+    like_count INT DEFAULT 0,
+    tags JSON,
+    published_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE SET NULL,
+    INDEX idx_author (author_id),
+    INDEX idx_type (post_type),
+    INDEX idx_status (status),
+    INDEX idx_published (published_at),
+    INDEX idx_published_status (published_at, status, visibility),
+    
+    FULLTEXT INDEX ft_posts (title, content)
+);
+```
+
+### Bảng POST_COMMENTS
+
+```sql
+CREATE TABLE post_comments (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    post_id BIGINT NOT NULL,
+    author_id BIGINT NOT NULL,
+    parent_comment_id BIGINT,
+    content TEXT NOT NULL,
+    status ENUM('ACTIVE', 'HIDDEN', 'DELETED') DEFAULT 'ACTIVE',
+    like_count INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+    FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (parent_comment_id) REFERENCES post_comments(id) ON DELETE CASCADE,
+    INDEX idx_post (post_id),
+    INDEX idx_author (author_id)
+);
+```
+
+### Bảng POST_LIKES
+
+```sql
+CREATE TABLE post_likes (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    post_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY uk_post_user (post_id, user_id)
+);
+```
+
+### Bảng POST_TAGS
+
+```sql
+CREATE TABLE post_tags (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    post_id BIGINT NOT NULL,
+    tag VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+    INDEX idx_post (post_id),
+    INDEX idx_tag (tag)
+);
+```
+
+### Bảng NOTIFICATIONS
+
+```sql
+CREATE TABLE notifications (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    type ENUM('EVENT_REMINDER', 'ANALYSIS_COMPLETE', 'RECOMMENDATION', 'ANNOUNCEMENT', 'SYSTEM') DEFAULT 'SYSTEM',
+    title VARCHAR(255) NOT NULL,
+    content TEXT,
+    priority ENUM('LOW', 'NORMAL', 'HIGH', 'URGENT') DEFAULT 'NORMAL',
+    status ENUM('UNREAD', 'READ', 'DISMISSED') DEFAULT 'UNREAD',
+    action_url VARCHAR(500),
+    action_data JSON,
+    scheduled_at TIMESTAMP NULL,
+    sent_at TIMESTAMP NULL,
+    read_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_notifications (user_id, status),
+    INDEX idx_scheduled (scheduled_at)
+);
+```
+
+### Bảng SYSTEM_SETTINGS
+
+```sql
+CREATE TABLE system_settings (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    setting_key VARCHAR(100) NOT NULL UNIQUE,
+    setting_value TEXT,
+    setting_type ENUM('STRING', 'INTEGER', 'BOOLEAN', 'JSON') DEFAULT 'STRING',
+    description TEXT,
+    category ENUM('GENERAL', 'AUDIO', 'RECOMMENDATION', 'EMAIL') DEFAULT 'GENERAL',
+    is_public BOOLEAN DEFAULT FALSE,
+    is_system BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    INDEX idx_category (category),
+    INDEX idx_key (setting_key)
+);
+```
+
+### Bảng AUDIT_LOGS
+
+```sql
+CREATE TABLE audit_logs (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT,
+    action ENUM('CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT', 'ANALYZE') NOT NULL,
+    entity_type VARCHAR(100),
+    entity_id BIGINT,
+    old_values JSON,
+    new_values JSON,
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_entity (entity_type, entity_id),
+    INDEX idx_user_actions (user_id, created_at),
+    INDEX idx_action (action)
+);
+```
+
+### Bảng API_TOKENS
+
+```sql
+CREATE TABLE api_tokens (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    token_name VARCHAR(100),
+    token_hash VARCHAR(255) NOT NULL,
+    scopes TEXT,
+    last_used_at TIMESTAMP NULL,
+    expires_at TIMESTAMP NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user (user_id),
+    INDEX idx_active (is_active)
+);
+```
+
+### Bảng FILE_UPLOADS
+
+```sql
+CREATE TABLE file_uploads (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    file_type ENUM('AUDIO', 'IMAGE', 'DOCUMENT') DEFAULT 'DOCUMENT',
+    file_name VARCHAR(255),
+    file_path VARCHAR(500),
+    file_url VARCHAR(500),
+    file_size BIGINT,
+    mime_type VARCHAR(100),
+    processing_status ENUM('PENDING', 'PROCESSED', 'FAILED') DEFAULT 'PENDING',
+    processing_result JSON,
+    expires_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user (user_id),
+    INDEX idx_type (file_type),
+    INDEX idx_status (processing_status)
+);
+```
+
+### Bảng RECOMMENDATION_LOGS
+
+```sql
+CREATE TABLE recommendation_logs (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    recommendation_type ENUM('SONG', 'EVENT', 'CONTENT') DEFAULT 'SONG',
+    item_id BIGINT NOT NULL,
+    item_type VARCHAR(50),
+    score DECIMAL(5,4),
+    factors JSON,
+    was_accepted BOOLEAN NULL,
+    recommended_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    responded_at TIMESTAMP NULL,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_recommendations (user_id, recommended_at),
+    INDEX idx_item (item_type, item_id)
+);
+```
+
+### Bảng EXERCISES
+
+```sql
+CREATE TABLE exercises (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    difficulty ENUM('BEGINNER', 'INTERMEDIATE', 'ADVANCED') DEFAULT 'BEGINNER',
+    target_voice_type VARCHAR(50),
+    min_midi INT,
+    max_midi INT,
+    exercise_type ENUM('WARMUP', 'RANGE', 'FLEXIBILITY', 'TONE', 'RHYTHM') DEFAULT 'WARMUP',
+    audio_url VARCHAR(500),
+    steps JSON,
+    estimated_minutes INT DEFAULT 5,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    INDEX idx_type (exercise_type),
+    INDEX idx_voice_type (target_voice_type)
+);
+```
+
+### Bảng USER_EXERCISES
+
+```sql
+CREATE TABLE user_exercises (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    exercise_id BIGINT NOT NULL,
+    status ENUM('NOT_STARTED', 'IN_PROGRESS', 'COMPLETED') DEFAULT 'NOT_STARTED',
+    completion_count INT DEFAULT 0,
+    last_score DECIMAL(5,2),
+    started_at TIMESTAMP NULL,
+    completed_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (exercise_id) REFERENCES exercises(id) ON DELETE CASCADE,
+    UNIQUE KEY uk_user_exercise (user_id, exercise_id),
+    INDEX idx_user (user_id)
+);
+```
+
+### Bảng PRACTICE_SESSIONS
+
+```sql
+CREATE TABLE practice_sessions (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    song_id BIGINT,
+    start_time TIMESTAMP NOT NULL,
+    end_time TIMESTAMP NULL,
+    duration_seconds INT,
+    practice_type ENUM('WARMUP', 'FULL_SONG', 'SECTION', 'PITCH_CARE') DEFAULT 'FULL_SONG',
+    notes TEXT,
+    performance_data JSON,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (song_id) REFERENCES songs(id) ON DELETE SET NULL,
+    INDEX idx_user_practice (user_id, created_at)
+);
+```
+
+### Bảng CHOIR_GROUPS (Future - Mở rộng)
+
+```sql
+CREATE TABLE choir_groups (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    voice_section ENUM('SOPRANO', 'ALTO', 'TENOR', 'BASS', 'MIXED') DEFAULT 'MIXED',
+    min_members INT DEFAULT 4,
+    max_members INT DEFAULT 20,
+    leader_id BIGINT,
+    status ENUM('ACTIVE', 'INACTIVE', 'AUDITIONING') DEFAULT 'ACTIVE',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (leader_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE choir_members (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    choir_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    voice_part ENUM('SOPRANO_1', 'SOPRANO_2', 'ALTO_1', 'ALTO_2', 'TENOR_1', 'TENOR_2', 'BASS') NOT NULL,
+    role ENUM('MEMBER', 'SECTION_LEADER', 'DEPUTY_LEADER') DEFAULT 'MEMBER',
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('ACTIVE', 'INACTIVE', 'AUDITIONING') DEFAULT 'AUDITIONING',
+    
+    FOREIGN KEY (choir_id) REFERENCES choir_groups(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY uk_choir_user (choir_id, user_id)
+);
 ```
 
 ---
 
-# 12. Cấu trúc source code đề xuất
+# PHẦN III: SEED DATA
 
-```text
+## 3.1. Voice Types
+
+```sql
+INSERT INTO voice_types (code, name, description, category, sort_order, is_active) VALUES
+('SOPRANO', 'Soprano', 'Giọng nữ cao, vùng âm cao nhất của nữ', 'HIGH', 1, TRUE),
+('MEZZO_SOPRANO', 'Mezzo-Soprano', 'Giọng nữ trung-cao', 'HIGH', 2, TRUE),
+('ALTO', 'Alto', 'Giọng nữ trung-thấp', 'MIDDLE', 3, TRUE),
+('TENOR', 'Tenor', 'Giọng nam cao', 'MIDDLE', 4, TRUE),
+('BARITONE', 'Baritone', 'Giọng nam trung', 'MIDDLE', 5, TRUE),
+('BASS', 'Bass', 'Giọng nam thấp', 'LOW', 6, TRUE);
+```
+
+## 3.2. Voice Ranges
+
+```sql
+INSERT INTO voice_ranges (name, code, min_midi, max_midi, description, difficulty_level) VALUES
+('Professional Soprano', 'PRO_SOPRANO', 72, 84, 'C4 to C6 - Soprano chuyên nghiệp', 'EXPERT'),
+('Standard Soprano', 'STD_SOPRANO', 66, 81, 'F3 to C6 - Soprano thông thường', 'HARD'),
+('Alto Range', 'ALTO_RANGE', 60, 77, 'C3 to F5 - Giọng Alto', 'MEDIUM'),
+('Countertenor', 'COUNTERTENOR', 60, 79, 'C3 to E5 - Giọng nam cao đặc biệt', 'EXPERT'),
+('Tenor', 'TENOR_RANGE', 55, 74, 'G2 to B4 - Giọng Tenor', 'MEDIUM'),
+('Baritone', 'BARITONE_RANGE', 50, 69, 'C3 to A4 - Giọng Baritone', 'MEDIUM'),
+('Bass', 'BASS_RANGE', 41, 64, 'E2 to E4 - Giọng Bass', 'EASY');
+```
+
+## 3.3. Genres
+
+```sql
+INSERT INTO genres (name, code, description, icon, color, sort_order, is_active) VALUES
+('Pop', 'POP', 'Nhạc Pop hiện đại', 'music_note', '#FF6B6B', 1, TRUE),
+('Ballad', 'BALLAD', 'Nhạc tình ca, ballad', 'favorite', '#FF9F43', 2, TRUE),
+('Rock', 'ROCK', 'Nhạc Rock', 'guitar', '#EE5A24', 3, TRUE),
+('R&B/Soul', 'RB_SOUL', 'Rhythm and Blues, Soul', 'headphones', '#9B59B6', 4, TRUE),
+('Jazz', 'JAZZ', 'Nhạc Jazz', 'piano', '#2C3E50', 5, TRUE),
+('Classical', 'CLASSICAL', 'Nhạc Cổ điển', 'library_music', '#8E44AD', 6, TRUE),
+('Folk', 'FOLK', 'Nhạc Dân gian', 'nature_people', '#27AE60', 7, TRUE),
+('Country', 'COUNTRY', 'Nhạc Country', 'terrain', '#D35400', 8, TRUE),
+('Hip-Hop/Rap', 'HIPHOP', 'Hip-Hop và Rap', 'mic', '#34495E', 9, TRUE),
+('EDM', 'EDM', 'Electronic Dance Music', 'party_mode', '#00CEC9', 10, TRUE),
+('Musical Theater', 'MUSICAL', 'Nhạc kịch', 'theater_comedy', '#FDCB6E', 11, TRUE),
+('Traditional Vietnamese', 'VIETNAMESE', 'Nhạc Việt Truyền thống', 'flag', '#E74C3C', 12, TRUE);
+```
+
+## 3.4. System Settings
+
+```sql
+INSERT INTO system_settings (setting_key, setting_value, setting_type, description, category, is_public, is_system) VALUES
+('audio_max_size_mb', '10', 'INTEGER', 'Maximum audio file size in MB', 'AUDIO', FALSE, TRUE),
+('audio_allowed_formats', '["wav", "mp3", "m4a", "ogg"]', 'JSON', 'Allowed audio formats', 'AUDIO', TRUE, TRUE),
+('audio_default_sample_rate', '44100', 'INTEGER', 'Default sample rate for processing', 'AUDIO', FALSE, TRUE),
+('f0_analysis_timeout', '60', 'INTEGER', 'F0 analysis timeout in seconds', 'AUDIO', FALSE, TRUE),
+('recommendation_max_songs', '20', 'INTEGER', 'Maximum songs in recommendation', 'RECOMMENDATION', TRUE, TRUE),
+('recommendation_default_weights', '{"range": 0.6, "genre": 0.25, "key": 0.10, "difficulty": 0.05}', 'JSON', 'Default recommendation weights', 'RECOMMENDATION', FALSE, TRUE),
+('event_default_capacity', '50', 'INTEGER', 'Default event capacity', 'GENERAL', TRUE, TRUE),
+('registration_open_days', '14', 'INTEGER', 'Days before event to open registration', 'GENERAL', TRUE, TRUE),
+('app_name', 'Music Club Platform', 'STRING', 'Application name', 'GENERAL', TRUE, TRUE),
+('app_version', '1.0.0', 'STRING', 'Current application version', 'GENERAL', TRUE, TRUE);
+```
+
+### 3.5. Voice Type Ranges (VOICE_TYPE_RANGES)
+
+```sql
+INSERT INTO voice_type_ranges (voice_type_id, voice_range_id, typical_min_midi, typical_max_midi, lower_boundary_midi, upper_boundary_midi, description) VALUES
+-- SOPRANO ranges
+(1, 1, 72.00, 84.00, 70.00, 86.00, 'Professional Soprano range'),
+(1, 2, 66.00, 81.00, 64.00, 83.00, 'Standard Soprano range'),
+
+-- MEZZO-SOPRANO ranges
+(2, 2, 66.00, 81.00, 63.00, 83.00, 'Mezzo-Soprano full range'),
+(2, 3, 60.00, 77.00, 58.00, 79.00, 'Mezzo-Soprano lower extension'),
+
+-- ALTO ranges
+(3, 3, 60.00, 77.00, 58.00, 79.00, 'Alto standard range'),
+
+-- TENOR ranges
+(4, 5, 55.00, 74.00, 52.00, 76.00, 'Tenor full range'),
+(4, 4, 60.00, 79.00, 57.00, 81.00, 'Countertenor extension'),
+
+-- BARITONE ranges
+(5, 6, 50.00, 69.00, 47.00, 71.00, 'Baritone full range'),
+(5, 5, 55.00, 74.00, 52.00, 76.00, 'Baritone high extension'),
+
+-- BASS ranges
+(6, 7, 41.00, 64.00, 38.00, 66.00, 'Bass full range');
+```
+
+### 3.6. Choir Groups (Future Extension)
+
+```sql
+-- Choir Groups
+INSERT INTO choir_groups (name, description, voice_section, min_members, max_members, status) VALUES
+('Hợp xướng Quân đội', 'Hợp xướng nam thuộc câu lạc bộ', 'TENOR', 8, 16, 'ACTIVE'),
+('Hợp xướng Nữ', 'Hợp xướng nữ cao của câu lạc bộ', 'SOPRANO', 6, 12, 'ACTIVE'),
+('Mixed Choir', 'Hợp xướng hỗn hợp 4声部', 'MIXED', 16, 32, 'ACTIVE'),
+('Gospel Choir', 'Hợp xướng Gospel và Contemporary', 'MIXED', 10, 20, 'ACTIVE'),
+('Auditioning Group', 'Nhóm đang trong quá trình tuyển thành viên', 'MIXED', 4, 8, 'AUDITIONING');
+```
+
+---
+
+# PHẦN IV: LỘ TRÌNH 100 NGÀY
+
+## Tổng quan Timeline
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│ PHASE 1: NỀN TẢNG & NGHIÊN CỨU (Day 01 - Day 20)                      │
+│ PHASE 2: BACKEND & DATABASE (Day 21 - Day 40)                          │
+│ PHASE 3: DSP & RECOMMENDATION (Day 41 - Day 55)                        │
+│ PHASE 4: MOBILE & ADMIN (Day 56 - Day 75)                             │
+│ PHASE 5: TÍCH HỢP & TESTING (Day 76 - Day 90)                         │
+│ PHASE 6: BÁO CÁO & BẢO VỆ (Day 91 - Day 100)                          │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+## Phase 1: Nền tảng & Nghiên cứu (Day 01 - Day 20)
+
+### Week 1: Kickoff & Research Foundation (Day 01 - Day 07)
+
+#### Day 01 - Kickoff Meeting
+
+| Thành viên | Công việc |
+|------------|-----------|
+| P1 (PM) | Tổ chức kickoff meeting, phân chia task board, thiết lập communication channel |
+| P2 (DSP) | Đọc đề tài, xác định RQ, ghi chú F0 pipeline |
+| P3 (Backend) | Setup Spring Boot project structure, chuẩn bị MySQL |
+| P4 (Mobile) | Setup Flutter project, tạo mockups |
+| P5 (Admin) | Setup React project, thiết kế wireframes |
+
+**Output:** Project charter, Communication plan, Initial repo structure
+
+---
+
+#### Day 02 - F0 Theory Deep Dive
+
+| Thành viên | Công việc |
+|------------|-----------|
+| P2 (DSP) | Nghiên cứu F0 concept, Pitch vs Frequency vs Harmonics, đặc tính giọng hát |
+| P4 (Mobile) | Nghiên cứu audio recording APIs, Sample rate, bit depth |
+
+**Output:** F0 Theory Document, Audio Specification
+
+---
+
+#### Day 03 - Pitch Detection Algorithms
+
+| Thành viên | Công việc |
+|------------|-----------|
+| P2 (DSP) | Autocorrelation method, YIN algorithm, pYIN algorithm, so sánh ưu/nhược |
+| P3 (Backend) | ERD draft đầu tiên |
+
+**Output:** Algorithm Comparison Table
+
+---
+
+#### Day 04 - Library Testing
+
+| Thành viên | Công việc |
+|------------|-----------|
+| P2 (DSP) | Test librosa.yin, librosa.pyin, chọn pYIN làm baseline |
+| P4 (Mobile) | Test recording package, playback, Test SQLite (sqflite) integration |
+| P4 (Mobile) | Thiết kế schema SQLite (local_practice_sessions, cached_songs, recording_drafts) |
+
+**Output:** Python experiment scripts, SQLite schema v1.0
+
+**Output:** Python experiment scripts
+
+---
+
+#### Day 05 - Dataset Preparation
+
+| Thành viên | Công việc |
+|------------|-----------|
+| P2 (DSP) | Tìm public vocal datasets, chuẩn bị test audio samples |
+| P3 (Backend) | Review ERD draft |
+
+**Output:** Dataset v0.1, Test Protocol
+
+---
+
+#### Day 06 - DSP Signal Processing
+
+| Thành viên | Công việc |
+|------------|-----------|
+| P2 (DSP) | Sampling theorem, Nyquist frequency, Windowing functions, Frame/hop length |
+| P4 (Mobile) | Microphone specifications, noise handling |
+
+**Output:** DSP Theory Notes
+
+---
+
+#### Day 07 - Preprocessing Implementation
+
+| Thành viên | Công việc |
+|------------|-----------|
+| P2 (DSP) | Mono conversion, resampling, normalization, basic silence filtering |
+| P3 (Backend) | ERD v1.0 final review, API contract draft |
+
+**Output:** preprocess.py v0.1, ERD v1.0, API Contract v1.0
+
+---
+
+#### 📅 Thứ 7 & Chủ nhật - Weekend Break
+| Thành viên | Hoạt động |
+|------------|-----------|
+| ALL | Nghỉ ngơi, review tuần 1, chuẩn bị cho tuần 2 |
+| P1 (PM) | Cập nhật task board, check-in 1-1 với từng thành viên |
+
+**Optional Output:** Week 1 retrospective notes
+
+---
+
+### Week 2: Core Implementation (Day 08 - Day 14)
+
+#### Day 08 - F0 Baseline
+- P2: Implement pYIN, extract F0 contour, visualize pitch
+- P4: UI prototype for recording, test audio file output
+
+#### Day 09 - Algorithm Comparison
+- P2: Compare YIN vs pYIN, test on different voice types, document findings
+- P1: Review F0 progress, adjust timeline
+
+#### Day 10 - F0 Cleaning
+- P2: Remove NaN values, filter out-of-range pitches, median filtering, smoothing
+- P4: UI for voice result display
+
+#### Day 11 - Hz to Note Conversion
+- P2: Hz to MIDI formula, MIDI to note name, A4 = 440Hz reference
+- P1: Review API contract, finalize endpoints
+
+#### Day 12 - Voice Range Algorithm
+- P2: Min/max pitch detection, percentile-based range, robust range estimation
+- P4: Voice range display UI, range visualization
+
+#### Day 13 - Voice Type Classification
+- P2: Study voice type ranges, rule-based classifier, overlap zone handling
+- P1: Architecture review, integration plan
+
+#### Day 14 - API Contract Finalization
+- P1: Finalize ERD, API contracts, create OpenAPI spec
+- ALL: Review and sign off
+
+**Output:** ERD v1.0, API Contract v1.0
+
+---
+
+### Week 3: Architecture & Setup (Day 15 - Day 20)
+
+#### Day 15 - Milestone 1 Review
+**MILESTONE 1 CHECKPOINT:**
+- F0 extraction ✓, Note conversion ✓, Voice range ✓, Voice type ✓, ERD ✓, API Contract ✓
+
+#### Day 16 - Spring Boot Setup
+- P3: Create Spring Boot project, configure Maven, connect to MySQL
+- P4: Flutter architecture setup, Provider/Riverpod setup
+
+#### Day 17 - Database Implementation
+- P3: Create all tables, add indexes, test foreign keys
+
+#### Day 18 - User Management
+- P3: User entity, User CRUD, User validation
+- P4: User model in Flutter, Login/Register screens
+
+#### Day 19 - Authentication
+- P3: Spring Security, JWT implementation, Role-based access
+- P4: Auth integration, Token storage
+
+#### Day 20 - Phase 1 Wrap
+- ALL: Phase 1 retrospective, Phase 2 kickoff
+
+---
+
+## Phase 2: Backend & Database (Day 21 - Day 40)
+
+### Week 4: Core Backend (Day 21 - Day 27)
+
+#### Day 21-23: Event Module
+- P3: Event entity & CRUD, Registration entity, Capacity management
+- P4: Event list UI, Event detail UI, Registration flow
+
+#### Day 24-26: Song Module
+- P3: Song entity, Song CRUD, Search & filter
+- P4: Song list UI, Song detail UI, Genre filter
+
+#### Day 27: Community Module
+- P3: Post entity, Post CRUD, Basic moderation
+- P4: Feed screen, Post detail
+
+---
+
+### Week 5: Python Integration (Day 28 - Day 34)
+
+#### Day 28-29: FastAPI Setup
+- P2: FastAPI project, Health endpoint, Analyze endpoint, File upload handling
+- P3: Prepare integration
+
+#### Day 30-31: Service Integration
+- P3: Spring calls Python, Error handling, Timeout management
+- P2: Optimize response, Error responses
+
+#### Day 32-33: Recommendation Engine
+- P3: Scoring algorithm, Range matching, Genre matching
+- P2: Recommendation formula review, Weight tuning
+- P3, P4: Sync API design (POST /api/voice/sync, GET /api/voice/profile)
+
+#### Day 34: Admin APIs + SQLite Sync
+- P3: Admin CRUD endpoints, Statistics endpoints
+- P3: Voice sync endpoint (POST /api/voice/sync)
+- P5: Review API contract, Start frontend development
+- P4: Implement local SQLite sync logic
+
+---
+
+### Week 6: Polish & Testing (Day 35 - Day 40)
+
+#### Day 35 - Milestone 2
+**PASS CRITERIA:**
+- Spring Boot + MySQL running ✓, JWT working ✓, CRUD complete ✓, Python integration working ✓, Recommendation API working ✓
+
+#### Day 36-37: Backend Testing
+- P3: JUnit tests, Integration tests
+- P1: Code review
+
+#### Day 38-39: Documentation
+- P3: API documentation, Swagger/OpenAPI
+- P1: Architecture documentation
+
+#### Day 40 - Phase 2 Review
+- ALL: Phase 2 retrospective, Planning Phase 3
+
+---
+
+## Phase 3: DSP & Recommendation (Day 41 - Day 55)
+
+### Week 7: F0 Evaluation (Day 41 - Day 47)
+
+#### Day 41-43: Experimental Protocol
+- P2: Define ground truth, Choose metrics, Test cases design
+- P1: Review methodology
+
+#### Day 44-45: Pitch Parameter Tuning
+- P2: Frame length testing, Hop length testing, fmin/fmax tuning, Voiced threshold tuning
+
+#### Day 46-47: F0 Accuracy Testing
+- P2: Error calculation (cents/Hz), Voiced/unvoiced errors, Noise testing
+
+---
+
+### Week 8: Recommendation Refinement (Day 48 - Day 55)
+
+#### Day 48-50: Recommendation Algorithm
+- P2: Range matching refinement, Key matching, Score calculation
+- P3: API integration, Response formatting
+
+#### Day 51-53: Evaluation
+- P2: Ablation study, Precision@K, User testing
+- P1: Results documentation
+
+#### Day 54-55: Research Freeze & Milestone 3
+**PASS CRITERIA:**
+- F0 accuracy measured ✓, Voice type classification working ✓, Recommendation scoring documented ✓, Research methodology frozen ✓
+
+---
+
+## Phase 4: Mobile & Admin (Day 56 - Day 75)
+
+### Week 9: Mobile Core (Day 56 - Day 62)
+
+#### Day 56-58: Mobile Auth & Navigation
+- P4: Auth screens, Navigation setup, State management
+
+#### Day 59-60: Event & Community
+- P4: Event list, Registration, Post feed
+
+#### Day 61-62: Audio Recording
+- P4: Recording UI, File handling, Upload to backend
+
+---
+
+### Week 10: Voice Analysis & Admin (Day 63 - Day 70)
+
+#### Day 63-65: Voice Analysis UI
+- P4: Analysis result display, Voice range visualization, History tracking
+- P5: Admin dashboard, Member management
+
+#### Day 66-68: Admin CRUD
+- P5: Song management, Event management, Post management
+
+#### Day 69-70: Admin Voice Profiles
+- P5: View voice profiles, Statistics
+
+---
+
+### Week 11: Polish & Integration (Day 71 - Day 75)
+
+#### Day 71-73: Full Integration
+- ALL: Mobile ↔ Backend ↔ Python integration, End-to-end testing, Bug fixing
+
+#### Day 74-75 - Milestone 4
+**PASS CRITERIA:**
+- Mobile login/registration ✓, Audio recording/upload ✓, Voice analysis display ✓, Recommendation display ✓, Admin CRUD complete ✓, Full integration working ✓
+
+---
+
+## Phase 5: Integration & Testing (Day 76 - Day 90)
+
+### Week 12-13: Testing & Optimization (Day 76 - Day 87)
+
+#### Day 76-78: Full Integration Testing
+- ALL: End-to-end scenarios, API testing, Audio testing
+
+#### Day 79-81: Performance & Security
+- P3: Performance optimization, Security hardening, Load testing
+- P2: F0 optimization, Latency testing
+
+#### Day 82-84: Recommendation Tuning
+- P2, P3: Weight optimization, Ablation study, User feedback integration
+
+#### Day 85-87: Bug Fixing & Polish
+- ALL: Bug fixes, UI polish, Error handling
+
+---
+
+### Week 14: Final Testing (Day 88 - Day 90)
+
+#### Day 88-89: Final Evaluation
+- P1: Final benchmark, Regression testing, Documentation review
+
+#### Day 90 - Milestone 5
+**PASS CRITERIA:**
+- No critical bugs ✓, Full demo flow works ✓, Benchmarks complete ✓, Documentation complete ✓
+
+---
+
+## Phase 6: Reporting & Defense (Day 91 - Day 100)
+
+### Week 15: Documentation (Day 91 - Day 95)
+
+#### Day 91-92: Report Writing
+- P2: Research chapter, F0 methodology
+- P3: System architecture, API documentation
+- P4: Mobile design, UI/UX chapter
+- P5: Admin documentation
+
+#### Day 93-95: Results & Analysis
+- P1, P2: Results tables, Charts, Analysis
+
+---
+
+### Week 16: Defense Preparation (Day 96 - Day 100)
+
+#### Day 96-98: Slide & Demo
+- ALL: Presentation slides, Demo script, Practice sessions
+
+#### Day 99: Final Preparation
+- ALL: Backup everything, Test demo environment, Prepare Q&A
+
+#### Day 100: FINAL MILESTONE
+**PASS CRITERIA:**
+- Source code frozen ✓, Build verified ✓, Demo reproducible ✓, Report complete ✓, Slides ready ✓, DEFENSE COMPLETE!
+
+---
+
+# PHẦN V: API DOCUMENTATION
+
+## 5.1. Authentication APIs
+
+### POST /api/auth/register
+
+**Request:**
+```json
+{
+  "email": "user@example.com",
+  "username": "user123",
+  "password": "SecurePass123!",
+  "fullName": "Nguyễn Văn A",
+  "phone": "0912345678",
+  "dateOfBirth": "2000-01-15",
+  "gender": "MALE"
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "email": "user@example.com",
+    "username": "user123",
+    "fullName": "Nguyễn Văn A",
+    "role": "MEMBER",
+    "createdAt": "2026-09-01T10:00:00Z"
+  },
+  "token": "eyJhbGciOiJIUzI1NiIs..."
+}
+```
+
+### POST /api/auth/login
+
+**Request:**
+```json
+{
+  "login": "user@example.com",
+  "password": "SecurePass123!"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": 1,
+      "email": "user@example.com",
+      "fullName": "Nguyễn Văn A",
+      "role": "MEMBER"
+    },
+    "token": "eyJhbGciOiJIUzI1NiIs..."
+  }
+}
+```
+
+---
+
+## 5.2. Voice Analysis APIs
+
+### POST /api/voice/analyze
+
+**Request:** multipart/form-data
+- `file`: audio file (wav, mp3, m4a)
+- `sessionId` (optional): analysis session ID
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "analysisId": 123,
+    "userId": 1,
+    "minF0": 165.0,
+    "maxF0": 587.0,
+    "avgF0": 285.0,
+    "medianF0": 278.5,
+    "stdF0": 45.2,
+    "minMidi": 48,
+    "maxMidi": 65,
+    "medianMidi": 54,
+    "rangeSemitones": 17.0,
+    "voiceType": "BARITONE",
+    "confidence": 0.85,
+    "voicedRatio": 0.72,
+    "octaveScore": 0.90,
+    "qualityGrade": "B",
+    "noteDistribution": {
+      "C4": 15,
+      "D4": 12,
+      "E4": 20,
+      "F4": 18,
+      "G4": 10
+    },
+    "analyzedAt": "2026-09-01T10:30:00Z"
+  }
+}
+```
+
+### GET /api/voice/profile
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "userId": 1,
+    "voiceType": "BARITONE",
+    "minF0": 165.0,
+    "maxF0": 587.0,
+    "avgF0": 285.0,
+    "medianF0": 278.5,
+    "minMidi": 48,
+    "maxMidi": 65,
+    "medianMidi": 54,
+    "rangeSemitones": 17.0,
+    "confidence": 0.85,
+    "stabilityScore": 0.78,
+    "qualityGrade": "B",
+    "analyzedAt": "2026-09-01T10:30:00Z"
+  }
+}
+```
+
+### GET /api/voice/history
+
+**Query params:** `page` (default: 0), `size` (default: 10)
+
+---
+
+## 5.3. Songs & Recommendation APIs
+
+### GET /api/songs
+
+**Query params:**
+- `genre`: genre ID
+- `difficulty`: BEGINNER|INTERMEDIATE|ADVANCED|EXPERT
+- `minMidi`, `maxMidi`: MIDI range
+- `search`: search term
+- `page`, `size`: pagination
+
+### GET /api/recommendations
+
+**Headers:** Authorization: Bearer {token}
+
+**Query params:** `genre` (optional), `limit` (default: 10)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "userVoiceType": "BARITONE",
+    "userRange": { "minMidi": 48, "maxMidi": 65 },
+    "recommendations": [
+      {
+        "song": {
+          "id": 45,
+          "title": "Nơi Này Có Anh",
+          "artist": "Sơn Tùng M-TP",
+          "genre": "POP",
+          "difficulty": "INTERMEDIATE"
+        },
+        "score": 0.92,
+        "matchReasons": [
+          { "type": "RANGE", "message": "Bài hát nằm trong vùng thoải mái" },
+          { "type": "GENRE", "message": "Phù hợp với thể loại yêu thích" }
+        ],
+        "rangeCompatibility": {
+          "songMinMidi": 52,
+          "songMaxMidi": 64,
+          "overlapPercent": 100.0,
+          "comfortableSinging": true
+        }
+      }
+    ]
+  }
+}
+```
+
+---
+
+## 5.4. Events APIs
+
+### GET /api/events
+
+**Query params:** `status`, `type`, `fromDate`, `page`, `size`
+
+### POST /api/events/{id}/register
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "data": {
+    "registrationId": 55,
+    "eventId": 1,
+    "status": "REGISTERED",
+    "ticketCode": "EVT001-ABC123",
+    "registeredAt": "2026-09-01T14:00:00Z"
+  }
+}
+```
+
+---
+
+## 5.5. Admin APIs
+
+### GET /api/admin/members
+
+**Query params:** `role`, `status`, `search`, `page`, `size`
+
+### GET /api/admin/statistics
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "totalMembers": 45,
+    "totalSongs": 150,
+    "totalEvents": 25,
+    "totalAnalyses": 120,
+    "voiceTypeDistribution": {
+      "SOPRANO": 8,
+      "ALTO": 10,
+      "TENOR": 5,
+      "BARITONE": 15,
+      "BASS": 7
+    },
+    "genreDistribution": {
+      "POP": 45,
+      "BALLAD": 35,
+      "ROCK": 20
+    }
+  }
+}
+```
+
+---
+
+# PHẦN VI: CẤU TRÚC THƯ MỰC
+
+```
 music-club-platform/
 │
-├── backend/
+├── backend-java/                          # P3 - Backend Lead
+│   ├── src/main/java/com/musicclub/
+│   │   ├── config/
+│   │   ├── security/
+│   │   ├── auth/
+│   │   ├── user/
+│   │   ├── voice/
+│   │   ├── song/
+│   │   ├── genre/
+│   │   ├── event/
+│   │   ├── post/
+│   │   ├── recommendation/
+│   │   ├── admin/
+│   │   ├── integration/
+│   │   ├── common/
+│   │   └── exception/
 │   ├── pom.xml
-│   └── src/
-│       ├── main/java/com/musicclub/
-│       │   ├── config/
-│       │   ├── security/
-│       │   ├── auth/
-│       │   ├── user/
-│       │   ├── event/
-│       │   ├── song/
-│       │   ├── post/
-│       │   ├── voice/
-│       │   ├── recommendation/
-│       │   ├── common/
-│       │   └── MusicClubApplication.java
-│       └── test/
-│
-├── dsp-service/
-│   ├── app/
-│   │   ├── main.py
-│   │   ├── api/
-│   │   ├── audio/
-│   │   │   ├── preprocessing.py
-│   │   │   ├── pitch.py
-│   │   │   ├── range.py
-│   │   │   └── note.py
-│   │   ├── analysis/
-│   │   │   └── voice_classifier.py
-│   │   └── schemas/
-│   ├── tests/
-│   ├── requirements.txt
 │   └── README.md
 │
-├── mobile/
-│   ├── lib/
-│   │   ├── core/
-│   │   ├── models/
-│   │   ├── services/
-│   │   ├── repositories/
-│   │   ├── features/
-│   │   │   ├── auth/
-│   │   │   ├── home/
-│   │   │   ├── events/
-│   │   │   ├── voice/
-│   │   │   ├── songs/
-│   │   │   └── posts/
-│   │   ├── widgets/
-│   │   └── main.dart
-│   └── test/
-│
-├── admin-web/
-│   ├── src/
-│   │   ├── api/
-│   │   ├── auth/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── layouts/
-│   │   └── types/
-│   └── package.json
-│
-├── database/
-│   ├── schema.sql
-│   ├── seed.sql
-│   └── migrations/
-│
-├── docs/
-│   ├── architecture.md
-│   ├── api.md
-│   ├── research/
-│   │   ├── f0.md
-│   │   ├── experiments.md
-│   │   └── recommendation.md
-│   └── report/
-│
-├── experiments/
+├── dsp-service/                           # P2 - Research Lead
+│   ├── app/
+│   │   ├── main.py
+│   │   ├── config.py
+│   │   ├── api/routes/
+│   │   ├── audio/
+│   │   ├── analysis/
+│   │   ├── evaluation/
+│   │   └── utils/
+│   ├── tests/
 │   ├── notebooks/
 │   ├── datasets/
-│   └── results/
+│   ├── results/
+│   ├── requirements.txt
+│   └── Dockerfile
 │
-├── postman/
-│   └── collection.json
+├── mobile-flutter/                         # P4 - Mobile Lead
+│   ├── lib/
+│   │   ├── main.dart
+│   │   ├── core/
+│   │   ├── models/
+│   │   ├── repositories/
+│   │   ├── services/
+│   │   ├── features/
+│   │   └── widgets/
+│   ├── pubspec.yaml
+│   └── README.md
 │
-├── docker-compose.yml
-└── README.md
+├── admin-web/                              # P5 - Admin Lead
+│   ├── src/
+│   │   ├── api/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── hooks/
+│   │   ├── context/
+│   │   ├── types/
+│   │   └── styles/
+│   ├── package.json
+│   └── README.md
+│
+├── database/
+│   ├── migrations/
+│   ├── seeds/
+│   ├── schema.sql
+│   └── seed.sql
+│
+├── docs/
+│   ├── architecture/
+│   ├── api/
+│   ├── research/
+│   ├── deployment/
+│   └── report/
+│
+├── docker/
+│   ├── docker-compose.yml
+│   ├── backend/Dockerfile
+│   └── dsp/Dockerfile
+│
+├── README.md
+└── .gitignore
 ```
 
 ---
 
-# 13. Risk Management
+# PHẦN VII: GIAO DIỆN VÀ WIREFRAMES
 
-| Risk | Mức độ | Cách xử lý |
-|---|---|---|
-| F₀ sai octave | Cao | pYIN + filtering + smoothing + evaluation |
-| Audio quá nhiễu | Cao | preprocessing + warning + test protocol |
-| Voice type khó phân loại | Cao | rule-based + ghi limitation |
-| Realtime quá phức tạp | Cao | MVP upload-file trước |
-| ML tốn thời gian | Cao | Không dùng ML trong MVP |
-| Flutter audio package lỗi | Trung bình | Chọn package ổn định; test Android sớm |
-| Python/Java integration lỗi | Cao | Chốt API contract từ Day 14 |
-| Backend quá lớn | Cao | Chỉ triển khai CRUD cần cho MVP |
-| Admin tốn thời gian | Trung bình | UI đơn giản, ưu tiên functionality |
-| Dataset ít | Cao | Kết hợp public dataset + controlled samples |
-| Kết quả nghiên cứu không đẹp | Cao | Báo cáo limitation, không "làm đẹp" số liệu |
-| Scope creep | Rất cao | Tách MUST/OPTIONAL |
-| Merge conflict | Trung bình | Branch riêng + API contract |
-| Mất dữ liệu/source | Cao | GitHub + backup database |
-| Performance Python | Trung bình | Process file ngắn, giới hạn file size |
+## 7.1. Mobile Screens
 
----
-
-# 14. Chiến lược khi bị trễ tiến độ
-
-## Nếu trễ 3 ngày
-
-Cắt:
-
-- [ ] Community nâng cao.
-- [ ] Dashboard nâng cao.
-- [ ] Recommendation filter phức tạp.
-
-## Nếu trễ 7 ngày
-
-Cắt:
-
-- [ ] Realtime F₀.
-- [ ] Voice history.
-- [ ] Admin statistics nâng cao.
-- [ ] Push notification.
-
-## Nếu trễ 14 ngày
-
-Chỉ giữ:
-
-```text
-Flutter
-  ↓
-Spring Boot
-  ↓
-Python F0
-  ↓
-MySQL
-  ↓
-Recommendation
+### Screen 1: Home Screen
+```
+┌─────────────────────────────┐
+│ ☰          Home        🔔  │
+├─────────────────────────────┤
+│  Chào mừng, [User Name]!    │
+│                             │
+│  ┌─────────────────────┐   │
+│  │ 🎤 Phân tích giọng  │   │
+│  │    hát của bạn      │   │
+│  └─────────────────────┘   │
+│                             │
+│  🎵 Gợi ý bài hát          │
+│  ┌─────┬─────┬─────┐       │
+│  │ 🎵  │ 🎵  │ 🎵  │       │
+│  └─────┴─────┴─────┘       │
+│                             │
+│  📅 Sự kiện sắp tới        │
+│  ┌─────────────────────┐   │
+│  │ Practice - 05/09    │   │
+│  │ 18:00 - 20:00       │   │
+│  └─────────────────────┘   │
+│                             │
+├─────────────────────────────┤
+│  🏠    📅    🎤    🎵    👤  │
+└─────────────────────────────┘
 ```
 
-MVP cuối cùng:
-
-1. Login.
-2. Record/upload.
-3. F₀ analysis.
-4. Voice range.
-5. Voice type.
-6. Song recommendation.
-7. Song management.
-8. Event management.
-
-**Không hy sinh phần nghiên cứu F₀ để giữ các tính năng phụ.**
-
----
-
-# 15. Definition of Done
-
-Một task chỉ được đánh dấu Done khi:
-
-- [ ] Code chạy được.
-- [ ] Không có lỗi blocker.
-- [ ] Có test hoặc test thủ công rõ ràng.
-- [ ] API/documentation được cập nhật nếu liên quan.
-- [ ] Code đã commit.
-- [ ] Branch được merge vào `develop`.
-- [ ] Người còn lại đã kiểm tra nếu task ảnh hưởng integration.
-
-## Definition of Done cho F₀
-
-- [ ] Input audio hợp lệ.
-- [ ] Có preprocessing.
-- [ ] Có pitch detection.
-- [ ] Có filtering.
-- [ ] Có F₀ output.
-- [ ] Có Hz → note.
-- [ ] Có range.
-- [ ] Có voice classification.
-- [ ] Có confidence/warning.
-- [ ] Có evaluation.
-- [ ] Có limitation.
-
-## Definition of Done cho Recommendation
-
-- [ ] Có song metadata.
-- [ ] Có user voice profile.
-- [ ] Có genre preference.
-- [ ] Có scoring.
-- [ ] Có Top-N.
-- [ ] Có explanation.
-- [ ] Có test cases.
-
----
-
-# 16. Final Deliverables
-
-## Software
-
-- [ ] Flutter Mobile App.
-- [ ] Spring Boot REST API.
-- [ ] Python FastAPI DSP Service.
-- [ ] React + TypeScript Admin Web.
-- [ ] MySQL database.
-- [ ] Postman collection.
-
-## Research
-
-- [ ] F₀ methodology.
-- [ ] pYIN experiment.
-- [ ] Preprocessing experiment.
-- [ ] Voice range method.
-- [ ] Voice classification.
-- [ ] Recommendation algorithm.
-- [ ] Evaluation metrics.
-- [ ] Benchmark results.
-- [ ] Limitations.
-
-## Documentation
-
-- [ ] Source code.
-- [ ] README.
-- [ ] Installation guide.
-- [ ] Architecture diagram.
-- [ ] ERD.
-- [ ] API documentation.
-- [ ] Database script.
-- [ ] Final report.
-- [ ] Slide.
-- [ ] Demo script.
-
----
-
-# 17. Tổng kết kiến trúc hệ thống
-
-## Backend responsibilities
-
-**Spring Boot** là trung tâm nghiệp vụ:
-
-```text
-Auth
-Users
-Events
-Songs
-Posts
-Voice Profiles
-Recommendations
-Admin
+### Screen 2: Voice Recording Screen
+```
+┌─────────────────────────────┐
+│ ←        Thu âm            │
+├─────────────────────────────┤
+│     Voice Type: BARITONE    │
+│     Confidence: 85%         │
+│                             │
+│  ┌─────────────────────┐   │
+│  │    ▁▂▃▅▆▇▆▅▃▂▁     │   │
+│  │   (Waveform)        │   │
+│  └─────────────────────┘   │
+│                             │
+│  Range: C3 - C4             │
+│  Semitones: 17              │
+│                             │
+│       ┌───────────┐        │
+│       │    🎤     │        │
+│       └───────────┘        │
+│                             │
+│  Tip: Hát 10-30s           │
+└─────────────────────────────┘
 ```
 
-## Python responsibilities
-
-**Python FastAPI** chỉ xử lý DSP:
-
-```text
-Audio
- ↓
-Preprocessing
- ↓
-Pitch/F0
- ↓
-Cleaning
- ↓
-Range
- ↓
-Voice Type
+### Screen 3: Recommendation Screen
+```
+┌─────────────────────────────┐
+│ ←     Bài hát gợi ý        │
+├─────────────────────────────┤
+│  Dựa trên giọng hát        │
+│  Voice Type: BARITONE       │
+│                             │
+│  ┌─────────────────────┐   │
+│  │ 🎵 Nơi Này Có Anh    │   │
+│  │ Sơn Tùng M-TP        │   │
+│  │ 🎯 92% phù hợp       │   │
+│  │ ✓ Trong vùng thoải mái│  │
+│  │ ✓ Pop - Thể loại yêu  │  │
+│  │ [▶ Nghe thử]          │   │
+│  └─────────────────────┘   │
+└─────────────────────────────┘
 ```
 
-Không để Python trực tiếp quản lý business database trong MVP.
-
-## Flutter responsibilities
-
-```text
-Authentication
-Recording
-Upload
-Results
-Events
-Community
-Recommendations
+## 7.2. Admin Dashboard
 ```
-
-## Admin Web responsibilities
-
-```text
-Members
-Events
-Songs
-Posts
-Voice Profiles
-Statistics
-```
-
-## Database responsibilities
-
-MySQL lưu:
-
-```text
-Users
-VoiceProfiles
-VoiceAnalyses
-Songs
-Genres
-Events
-Registrations
-Posts
+┌──────────────────────────────────────────────────────────────┐
+│  🎵 Music Club Admin                                         │
+├──────────┬──────────────────────────────────────────────────┤
+│ Sidebar  │  Dashboard Overview                               │
+│          │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐   │
+│ Dashboard│  │  45    │ │  150   │ │   25   │ │  120   │   │
+│ Members  │  │Members │ │ Songs  │ │ Events │ │Analyses│   │
+│ Songs    │  └────────┘ └────────┘ └────────┘ └────────┘   │
+│ Events   │                                                   │
+│ Posts    │  Voice Type Distribution        Monthly Growth    │
+│ Voice    │  ┌────────────────────┐ ┌─────────────────────┐  │
+│ Settings │  │ ▓▓ Soprano: 8     │ │     📈              │  │
+│          │  │ ▓▓ Alto: 10       │ │   ▄▄               │  │
+│          │  │ ▓▓ Baritone: 15   │ │ ▄▄▄▄▄▄              │  │
+│          │  │ ▓▓ Bass: 7        │ │                     │  │
+│          │  └────────────────────┘ └─────────────────────┘  │
+└──────────┴──────────────────────────────────────────────────┘
 ```
 
 ---
 
-# 18. Kết quả nghiên cứu nên chứng minh
+# PHẦN VIII: TECHNICAL SPECIFICATIONS
 
-Đồ án không nên chỉ chứng minh "app chạy được".
+## 8.1. Audio Specifications
 
-Nên trả lời được 4 câu hỏi:
+| Parameter | Value | Notes |
+|-----------|-------|-------|
+| Format | WAV (preferred), MP3, M4A | WAV for best quality |
+| Sample Rate | 44100 Hz | Standard audio |
+| Bit Depth | 16-bit minimum | 24-bit preferred |
+| Channels | Mono | Required for analysis |
+| Duration | 10-60 seconds | Optimal for F0 extraction |
+| Max File Size | 10 MB | Server limit |
 
-### RQ1 — F₀
+## 8.2. F0 Detection Parameters
 
-> Phương pháp pYIN có thể trích xuất F₀ từ giọng hát trong điều kiện thử nghiệm với độ chính xác như thế nào?
+| Parameter | Value | Tunable Range |
+|-----------|-------|---------------|
+| Frame Length | 2048 samples | 1024-4096 |
+| Hop Length | 512 samples | 256-1024 |
+| Fmin | 50 Hz | 30-100 Hz |
+| Fmax | 500 Hz | 300-1000 Hz |
+| Voiced Threshold | 0.5 | 0.3-0.8 |
 
-### RQ2 — Robustness
+## 8.3. Voice Type Ranges (in MIDI)
 
-> Preprocessing và filtering cải thiện kết quả F₀ như thế nào?
+| Voice Type | Category | Typical Range | Overlap Zone |
+|------------|----------|---------------|--------------|
+| Soprano | HIGH (Female) | G3-C6 (55-84) | A3-D4 |
+| Mezzo-Soprano | HIGH (Female) | A3-B5 (57-83) | F3-B3 |
+| Alto | MIDDLE (Female) | F3-D5 (53-74) | C3-F3 |
+| Tenor | MIDDLE (Male) | C3-C5 (48-72) | G3-B3 |
+| Baritone | MIDDLE (Male) | A2-A4 (45-69) | C3-E3 |
+| Bass | LOW (Male) | E2-E4 (40-64) | A2-C3 |
 
-### RQ3 — Voice Range
+## 8.4. API Response Time Targets
 
-> F₀ contour có thể được sử dụng để ước lượng vocal range và phân nhóm giọng ở mức ứng dụng như thế nào?
+| Endpoint | Target | Max |
+|----------|--------|-----|
+| Health Check | < 100ms | 200ms |
+| Auth | < 500ms | 1000ms |
+| Voice Analysis | < 5s | 10s |
+| Song List | < 300ms | 500ms |
+| Recommendations | < 1s | 2s |
+| Admin Statistics | < 1s | 2s |
 
-### RQ4 — Recommendation
+## 8.5. Recommendation Algorithm Specification
 
-> Việc kết hợp vocal range + key + genre có tạo recommendation phù hợp hơn so với chỉ dùng genre hay không?
+### 8.5.1. Scoring Formula
 
-Đây mới là phần tạo **giá trị nghiên cứu** cho đề tài.
+```
+FinalScore = (RangeScore × 0.6) + (GenreScore × 0.25) + (KeyScore × 0.10) + (DifficultyScore × 0.05)
+```
+
+| Weight | Factor | Description |
+|--------|--------|-------------|
+| 0.60 | Range Match | How well the song fits user's vocal range |
+| 0.25 | Genre Preference | User's genre preferences |
+| 0.10 | Key Compatibility | Song key compatibility (transposition) |
+| 0.05 | Difficulty Match | Song difficulty vs user's level |
+
+### 8.5.2. Range Score Calculation
+
+```python
+def calculate_range_score(user_min_midi, user_max_midi, song_min_midi, song_max_midi):
+    """
+    Calculate how well a song fits within user's comfortable range.
+    
+    Perfect match: User can sing entire song without strain
+    """
+    # Find overlap between user range and song range
+    overlap_min = max(user_min_midi, song_min_midi)
+    overlap_max = min(user_max_midi, song_max_midi)
+    
+    if overlap_min > overlap_max:
+        # No overlap - song is outside user's range
+        return 0.0
+    
+    overlap_semitones = overlap_max - overlap_min
+    song_range_semitones = song_max_midi - song_min_midi
+    
+    # Score = percentage of song user can sing comfortably
+    overlap_percent = overlap_semitones / song_range_semitones if song_range_semitones > 0 else 0
+    
+    # Bonus for songs that stay within user's sweet spot (comfortable zone)
+    user_sweet_spot_min = user_min_midi + 3  # 3 semitones above min
+    user_sweet_spot_max = user_max_midi - 3  # 3 semitones below max
+    
+    in_sweet_spot = (song_min_midi >= user_sweet_spot_min and 
+                     song_max_midi <= user_sweet_spot_max)
+    
+    if in_sweet_spot:
+        overlap_percent = min(1.0, overlap_percent * 1.1)  # 10% bonus
+    
+    return round(overlap_percent, 3)
+```
+
+### 8.5.3. Genre Score Calculation
+
+```python
+def calculate_genre_score(user_genre_preferences, song_genres):
+    """
+    Calculate genre match score based on user's genre preferences.
+    
+    user_genre_preferences: List of (genre_id, preference_level 1-5)
+    song_genres: List of (genre_id, is_primary) for the song
+    """
+    if not song_genres:
+        return 0.0
+    
+    max_possible_score = 0.0
+    matched_score = 0.0
+    
+    for song_genre, is_primary in song_genres:
+        # Find user's preference for this genre
+        user_pref = user_genre_preferences.get(song_genre, 0)
+        
+        # Primary genre = weight 1.0, Secondary = weight 0.5
+        genre_weight = 1.0 if is_primary else 0.5
+        
+        # Normalize preference (1-5) to (0-1)
+        normalized_pref = (user_pref - 1) / 4
+        
+        matched_score += normalized_pref * genre_weight
+        max_possible_score += genre_weight
+    
+    return round(matched_score / max_possible_score, 3) if max_possible_score > 0 else 0.0
+```
+
+### 8.5.4. Key Score Calculation
+
+```python
+# Key compatibility wheel (for transposition analysis)
+KEY_COMPATIBILITY = {
+    # C major
+    'C': ['G', 'F', 'Am', 'Dm', 'Em'],
+    'C#': ['G#', 'F#', 'A#m', 'D#m', 'Fm'],
+    'D': ['A', 'G', 'Bm', 'Em', 'F#m'],
+    'Eb': ['Bb', 'F', 'Cm', 'Gm', 'Am'],
+    'E': ['B', 'A', 'C#m', 'G#m', 'F#m'],
+    'F': ['C', 'Bb', 'Dm', 'Am', 'Bm'],
+    'F#': ['C#', 'B', 'D#m', 'A#m', 'Bbm'],
+    'G': ['D', 'C', 'Em', 'Bm', 'Am'],
+    'Ab': ['Eb', 'Db', 'Cbm', 'Fm', 'Gm'],
+    'A': ['E', 'D', 'C#m', 'F#m', 'Bm'],
+    'Bb': ['F', 'Eb', 'Gm', 'Cm', 'Dm'],
+    'B': ['F#', 'E', 'G#m', 'D#m', 'C#m'],
+}
+
+def calculate_key_score(user_voice_type, song_original_key):
+    """
+    Calculate how suitable the song's key is for user's voice type.
+    
+    Bass/Baritone: Lower keys (C, D, E) more comfortable
+    Tenor: Mid keys (F, G, A) more comfortable  
+    Alto/Mezzo: Mid-high keys (G, A, Bb) more comfortable
+    Soprano: High keys (C, D, E) more comfortable
+    """
+    # Default: no key preference = neutral score
+    if not song_original_key:
+        return 0.5
+    
+    voice_type_keys = {
+        'BASS': ['C', 'D', 'E', 'F'],
+        'BARITONE': ['D', 'E', 'F', 'G'],
+        'TENOR': ['F', 'G', 'A', 'Bb'],
+        'ALTO': ['G', 'A', 'Bb', 'C'],
+        'MEZZO_SOPRANO': ['A', 'Bb', 'C', 'D'],
+        'SOPRANO': ['C', 'D', 'E', 'F#'],
+    }
+    
+    comfortable_keys = voice_type_keys.get(user_voice_type, ['C', 'D', 'E', 'F', 'G'])
+    
+    # Extract root note from key (e.g., "C", "Am", "F#m")
+    root_note = song_original_key[0] if len(song_original_key) > 0 else None
+    
+    if root_note in comfortable_keys:
+        return 1.0
+    elif root_note in KEY_COMPATIBILITY.get(root_note, []):
+        return 0.8
+    else:
+        return 0.5  # Requires transposition
+```
+
+### 8.5.5. Difficulty Score Calculation
+
+```python
+def calculate_difficulty_score(user_analyses, song_difficulty):
+    """
+    Calculate match between user's skill level and song difficulty.
+    
+    Ideal: User's median difficulty ≈ Song difficulty
+    """
+    difficulty_map = {
+        'BEGINNER': 1,
+        'INTERMEDIATE': 2,
+        'ADVANCED': 3,
+        'EXPERT': 4
+    }
+    
+    if not user_analyses:
+        # New user: default to intermediate
+        user_level = 2
+    else:
+        # Estimate from user's voice quality
+        avg_confidence = sum(a['confidence'] for a in user_analyses) / len(user_analyses)
+        user_level = min(4, int(avg_confidence * 4) + 1)
+    
+    song_level = difficulty_map.get(song_difficulty, 2)
+    level_diff = abs(user_level - song_level)
+    
+    # Perfect match = 1.0, 1 level off = 0.7, 2 levels = 0.4, 3+ levels = 0.1
+    difficulty_scores = {0: 1.0, 1: 0.7, 2: 0.4, 3: 0.1}
+    
+    return difficulty_scores.get(level_diff, 0.1)
+```
+
+### 8.5.6. Final Recommendation Example
+
+```json
+{
+  "song": {
+    "id": 45,
+    "title": "Nơi Này Có Anh",
+    "artist": "Sơn Tùng M-TP",
+    "genre": "POP",
+    "difficulty": "INTERMEDIATE",
+    "original_key": "C",
+    "min_midi": 52,
+    "max_midi": 64
+  },
+  "user_profile": {
+    "voice_type": "BARITONE",
+    "min_midi": 48,
+    "max_midi": 65
+  },
+  "scoring_breakdown": {
+    "range_score": 0.923,
+    "genre_score": 0.875,
+    "key_score": 1.0,
+    "difficulty_score": 1.0,
+    "weights": {
+      "range": 0.6,
+      "genre": 0.25,
+      "key": 0.10,
+      "difficulty": 0.05
+    }
+  },
+  "final_score": 0.92,
+  "match_reasons": [
+    "✓ Bài hát nằm trong vùng thoải mái của bạn (92% overlap)",
+    "✓ Pop là thể loại bạn yêu thích",
+    "✓ Khóa C phù hợp với giọng Baritone",
+    "✓ Độ khó trung bình phù hợp với trình độ của bạn"
+  ],
+  "warnings": []
+}
+```
 
 ---
 
-# 19. Checklist cuối cùng trước bảo vệ
+# PHẦN IX: PROJECT MANAGEMENT
 
-## Research
+## 9.1. Sprint Structure
+```
+Week 1-16: ~20 sprints in 100 days
+Weekend: Sprint Review + Planning
+```
 
-- [ ] Có nguồn tài liệu học thuật.
-- [ ] Có giải thích F₀.
-- [ ] Có giải thích YIN/pYIN.
-- [ ] Có preprocessing.
-- [ ] Có dataset.
-- [ ] Có ground truth/test protocol.
-- [ ] Có metrics.
-- [ ] Có kết quả.
-- [ ] Có limitation.
+## 9.2. Definition of Done
 
-## Backend
+### Code
+- Code compiles without errors
+- Unit tests pass
+- No critical bugs
+- Code review approved
+- Merged to develop branch
 
-- [ ] Spring Boot chạy.
-- [ ] MySQL chạy.
-- [ ] JWT chạy.
-- [ ] CRUD chạy.
-- [ ] Python integration chạy.
-- [ ] Recommendation chạy.
+### Feature
+- All acceptance criteria met
+- Integration tested
+- Documentation updated
 
-## Mobile
-
-- [ ] Login.
-- [ ] Event.
-- [ ] Recording.
-- [ ] Upload.
-- [ ] Analysis.
-- [ ] Voice result.
-- [ ] Recommendation.
-
-## Admin
-
-- [ ] Login.
-- [ ] Members.
-- [ ] Songs.
-- [ ] Events.
-- [ ] Posts.
-- [ ] Voice profiles.
-
-## Deployment/Demo
-
-- [ ] Clean installation test.
-- [ ] Seed database.
-- [ ] Demo account.
-- [ ] Test audio.
-- [ ] Backup source.
-- [ ] Backup database.
-- [ ] Backup report.
-- [ ] Backup slides.
+### Research
+- Methodology documented
+- Results reproducible
+- Limitations acknowledged
 
 ---
 
-# 20. Ưu tiên tuyệt đối của 100 ngày
+# PHẦN X: POTENTIAL RISKS & MITIGATIONS
 
-Nếu phải lựa chọn giữa **thêm tính năng** và **nâng chất lượng nghiên cứu**, chọn:
+## 10.1. Technical Risks
 
-```text
-1. F₀ accuracy
-2. Voice range reliability
-3. Recommendation methodology
-4. Evaluation
-5. Backend integration
-6. Mobile MVP
-7. Admin
-8. Optional features
+| Risk | Probability | Impact | Mitigation |
+|------|-------------|--------|------------|
+| F0 accuracy issues | High | High | Extensive testing, multiple algorithms |
+| Python/Java integration fails | High | High | Early API contract, mock testing |
+| Flutter audio package issues | Medium | Medium | Test multiple packages early |
+| Database performance issues | Low | Medium | Proper indexing, query optimization |
+| Mobile performance on low-end devices | Medium | Low | Optimize UI, lazy loading |
+
+## 10.2. Schedule Risks
+
+| Risk | Probability | Mitigation |
+|------|-------------|------------|
+| Scope creep | High | Strict MVP definition, defer features |
+| Member unavailable | Medium | Documentation, knowledge sharing |
+| Integration delays | High | Early integration testing |
+| Report writing delays | Medium | Parallel work, template preparation |
+
+## 10.3. Detailed Risk Recommendations
+
+### 10.3.1. Rủi ro quá tải cho P3 (Backend Lead)
+
+| Thông tin | Chi tiết |
+|-----------|----------|
+| **Vấn đề** | P3 gánh lượng công việc rất lớn: Spring Boot (Security/JWT, full CRUD 15+ bảng, Recommendation Engine, Sync API với Mobile, Admin API, JUnit test, Deployment) |
+| **Xác suất** | High |
+| **Tác động** | Trễ tiến độ toàn bộ dự án |
+
+**Đề xuất:**
+- P1 (PM/Architect) cần sẵn sàng viết code phụ trách các module phụ (như Post/Community hay Attendance) cho P3 ở Phase 2
+- Chia nhỏ task cho P3 thành các subtask rõ ràng với deadlines cụ thể
+- Ưu tiên module core (Auth, Voice Analysis, Recommendations) trước
+
+### 10.3.2. Rủi ro Latency khi giao tiếp Spring Boot ↔ Python FastAPI
+
+| Thông tin | Chi tiết |
+|-----------|----------|
+| **Vấn đề** | Luồng xử lý: Mobile → Spring Boot → Python FastAPI (pYIN) → Spring Boot. Nếu file audio 30-60s, pYIN có thể mất vài giây, dễ gây timeout REST API đồng bộ |
+| **Xác suất** | High |
+| **Tác động** | App bị lag, timeout, trải nghiệm user kém |
+
+**Đề xuất:**
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    ARCHITECTURE: ASYNC PIPELINE                  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  OPTION 1: Direct Upload (Recommended)                          │
+│  ┌────────┐      ┌────────────┐      ┌────────────┐            │
+│  │Mobile  │─────▶│  FastAPI   │─────▶│  Spring    │            │
+│  │        │      │  (Python)  │      │  (Webhook) │            │
+│  └────────┘      └────────────┘      └────────────┘            │
+│       │                 │                                       │
+│       │                 ▼                                       │
+│       │           ┌────────────┐                                │
+│       └──────────▶│   S3/MinIO │                                │
+│                   │  (Storage)  │                                │
+│                   └────────────┘                                │
+│                                                                  │
+│  OPTION 2: Async Queue                                          │
+│  ┌────────┐      ┌────────────┐      ┌────────────┐            │
+│  │Mobile  │─────▶│  Spring    │─────▶│   Redis    │            │
+│  │        │      │  (Queue)   │      │   Queue    │            │
+│  └────────┘      └────────────┘      └────────────┘            │
+│                                              │                  │
+│                                              ▼                  │
+│                                        ┌────────────┐          │
+│                                        │  FastAPI   │          │
+│                                        │  (Worker)  │          │
+│                                        └────────────┘          │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-**Mục tiêu cuối cùng không phải là xây một ứng dụng thật lớn.**
+**Kế hoạch triển khai:**
+- Phase 2: Implement synchronous API (prototype)
+- Phase 3: Chuyển sang async pipeline
+- Cấu hình timeout: 30s cho sync, unlimited cho async
 
-Mục tiêu là xây một hệ thống vừa đủ hoàn chỉnh để chứng minh rằng:
+### 10.3.3. Quản lý thiết bị thu âm phía Flutter (P4)
 
-```text
-F₀ Analysis
-      ↓
-Voice Range
-      ↓
-Voice Classification
-      ↓
-Song Compatibility
-      ↓
-Genre-aware Recommendation
-      ↓
-Real-world Music Club Application
+| Thông tin | Chi tiết |
+|-----------|----------|
+| **Vấn đề** | Audio recording trên Flutter ở các dòng máy Android khác nhau có thể cho ra sample rate hoặc định dạng mặc định khác nhau (AAC, m4a, wav) |
+| **Xác suất** | Medium |
+| **Tác động** | File audio khi gửi sang Python xử lý có thể bị lệch pitch/F0 |
+
+**Đề xuất - Cấu hình cứng thu âm (Week 1 - Day 04):**
+
+```dart
+// audio_recorder_config.dart
+class AudioRecorderConfig {
+  // Cấu hình bắt buộc cho tất cả thiết bị
+  static const int sampleRate = 44100;      // Hz - chuẩn audio
+  static const int bitDepth = 16;            // bits - PCM
+  static const int channels = 1;             // Mono - required for F0
+  static const String codec = 'pcm16bit';    // Lossless codec
+  
+  // Giới hạn
+  static const int minDurationSeconds = 10;
+  static const int maxDurationSeconds = 60;
+  static const int maxFileSizeMB = 10;
+}
 ```
 
-và có **thực nghiệm, số liệu, đánh giá và giới hạn** đủ rõ ràng để bảo vệ giá trị nghiên cứu của đề tài.
+**Checklist Day 04 (P4):**
+- [ ] Test trên 3+ thiết bị Android khác nhau
+- [ ] Verify sample rate output = 44100Hz
+- [ ] Verify file format = WAV/PCM
+- [ ] Test với Python FastAPI endpoint
+
+### 10.3.4. Khái niệm MIDI Float vs MIDI Int
+
+| Thông tin | Chi tiết |
+|-----------|----------|
+| **Vấn đề** | Bảng `voice_type_ranges` dùng `typical_min_midi DECIMAL(5,2)`, bảng `songs` dùng `min_midi INT` |
+| **Xác suất** | Low (design issue) |
+| **Tác động** | Khó so sánh chính xác, có thể missing edge cases |
+
+**Đề xuất - Đồng nhất kiểu dữ liệu MIDI:**
+
+| Bảng | Trường | Kiểu hiện tại | Kiểu đề xuất | Ghi chú |
+|------|--------|---------------|--------------|---------|
+| `voice_type_ranges` | typical_min_midi | DECIMAL(5,2) | INT | Là giá trị chuẩn, không cần decimal |
+| `voice_type_ranges` | typical_max_midi | DECIMAL(5,2) | INT | Là giá trị chuẩn, không cần decimal |
+| `voice_type_ranges` | overlap_min_midi | DECIMAL(5,2) | INT | Overlap zone |
+| `voice_type_ranges` | overlap_max_midi | DECIMAL(5,2) | INT | Overlap zone |
+| `songs` | min_midi | INT | INT | ✅ Đúng |
+| `songs` | max_midi | INT | INT | ✅ Đúng |
+| `voice_profiles` | min_midi | INT | INT | ✅ Đúng |
+| `voice_profiles` | max_midi | INT | INT | ✅ Đúng |
+| `vocal_profiles` (I.5) | min_midi | INT | INT | ✅ Đúng |
+| `vocal_profiles` (I.5) | max_midi | INT | INT | ✅ Đúng |
+
+**Lưu ý về F0 vs MIDI:**
+- **F0 (Hz)**: Luôn là DECIMAL/FLOAT vì tần số thực (ví dụ: 165.5 Hz)
+- **MIDI**: Luôn là INT vì là số thứ tự nốt nhạc (C4 = 60, A4 = 69)
+
+**Conversion Formula:**
+```
+MIDI = round(12 * log2(F0 / 440) + 69)
+F0 = 440 * 2^((MIDI - 69) / 12)
+```
+
+---
+
+## 10.4. Đánh giá tổng thể
+
+| Tiêu chí | Điểm | Ghi chú |
+|----------|------|---------|
+| **Độ hoàn thiện Roadmap** | 9.5/10 | Cần bổ sung chi tiết async pipeline |
+| **Tính khả thi trong 100 ngày** | High | Nếu tuân thủ đúng các mốc Checkpoint |
+| **Phân bổ công việc** | 8/10 | P3 có nguy cơ quá tải |
+| **Quản lý rủi ro** | 8.5/10 | Cần theo dõi sát latency issue |
+
+**Checkpoint Schedule:**
+| Checkpoint | Ngày | Deliverables |
+|------------|------|--------------|
+| Milestone 1 | Day 15 | ERD final, API contract, Python prototype |
+| Milestone 2 | Day 30 | Spring Boot core APIs, Flutter auth screens |
+| Milestone 3 | Day 50 | F0 pipeline hoàn chỉnh, Recommendation working |
+| Milestone 4 | Day 70 | Full integration, Admin dashboard basic |
+| Milestone 5 | Day 90 | Testing, bug fixes, polish |
+
+**Kết luận:** Tài liệu đã đủ tiêu chuẩn để chốt (Freeze) và tiến hành Phase 1. Có thể bắt đầu giao công việc cho từng thành viên theo đúng lịch trình từ Day 01.
+
+---
+
+# PHẦN XI: APPENDIX
+
+## 11.1. Glossary
+
+| Term | Definition |
+|------|------------|
+| F0 | Fundamental frequency - the lowest frequency of a periodic waveform |
+| Pitch | Perceived frequency of a sound |
+| MIDI | Musical Instrument Digital Interface - note numbering system |
+| pYIN | Probabilistic YIN - pitch detection algorithm |
+| Voiced/Unvoiced | Frames with/without vocal cord vibration |
+| Voice Type | Classification of vocal range (Soprano, Alto, Tenor, Bass) |
+| Vocal Range | The span from lowest to highest pitch a voice can produce |
+
+## 11.2. References
+
+1. Mauch, M., & Dixon, S. (2014). pYIN: A fundamental frequency estimator using probabilistic threshold-free pitch tracking.
+2. De Cheveigné, A., & Kawahara, H. (2002). YIN, a fundamental frequency estimator for speech and music.
+3. Jovanov, L., & Dodig, I. (2019). Voice Classification and Range Detection.
+4. Librosa Documentation: https://librosa.org/doc/
+
+## 11.3. Useful Commands
+
+```bash
+# Backend
+cd backend-java && mvn spring-boot:run
+
+# DSP Service
+cd dsp-service && uvicorn app.main:app --reload --port 8000
+
+# Database
+mysql -u root -p music_club < database/schema.sql
+
+# Mobile
+cd mobile-flutter && flutter run
+
+# Admin
+cd admin-web && npm start
+```
+
+---
+
+**Document Version:** 3.3  
+**Last Updated:** September 4, 2026  
+**Authors:** Project Team (5 Members)  
+**Status:** Ready for Implementation (Frozen)
+
+---
