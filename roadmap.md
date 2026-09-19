@@ -913,9 +913,7 @@ CREATE TABLE song_genres (
     INDEX idx_genre_song (genre_id, song_id)
 );
 ```
-
 ### Bảng SONG_KEYS
-
 ```sql
 CREATE TABLE song_keys (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
