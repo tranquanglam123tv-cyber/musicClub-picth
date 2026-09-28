@@ -1,0 +1,2016 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Club - Phân Tích Giọng Hát AI</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎵%3C/text%3E%3C/svg%3E">
+    <style>
+        /* ============== CSS Reset & Variables ============== */
+        :root {
+            /* Dark theme (default) */
+            --bg-primary: #0a0e27;
+            --bg-secondary: #16213e;
+            --bg-tertiary: #1a1a2e;
+            --bg-card: rgba(255,255,255,0.05);
+            --bg-card-hover: rgba(255,255,255,0.08);
+            --text-primary: #ffffff;
+            --text-secondary: #b8b8d4;
+            --text-muted: #8888a0;
+            --border-color: rgba(255,255,255,0.1);
+            --border-hover: rgba(0,217,255,0.4);
+            --accent-1: #00d9ff;
+            --accent-2: #00ff88;
+            --accent-3: #ff6b6b;
+            --accent-4: #ffaa00;
+            --shadow-sm: 0 4px 12px rgba(0,0,0,0.2);
+            --shadow-md: 0 10px 30px rgba(0,0,0,0.3);
+            --shadow-lg: 0 20px 60px rgba(0,0,0,0.4);
+            --gradient-main: linear-gradient(135deg, #00d9ff 0%, #00ff88 100%);
+            --gradient-warm: linear-gradient(135deg, #ff6b6b 0%, #ffaa00 100%);
+            --gradient-bg: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f5f7fb;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #e8eaf3;
+            --bg-card: rgba(255,255,255,0.7);
+            --bg-card-hover: rgba(255,255,255,0.9);
+            --text-primary: #1a1a2e;
+            --text-secondary: #4a4a6a;
+            --text-muted: #6a6a85;
+            --border-color: rgba(0,0,0,0.08);
+            --border-hover: rgba(0,153,204,0.4);
+            --shadow-sm: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-md: 0 10px 30px rgba(0,0,0,0.12);
+            --shadow-lg: 0 20px 60px rgba(0,0,0,0.15);
+            --gradient-bg: linear-gradient(135deg, #e0e7ff 0%, #f5f7fb 50%, #ffe0f0 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--gradient-bg);
+            min-height: 100vh;
+            color: var(--text-primary);
+            transition: background 0.3s, color 0.3s;
+            overflow-x: hidden;
+        }
+
+        /* ============== Animated Background ============== */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                radial-gradient(circle at 20% 30%, rgba(0,217,255,0.15), transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(0,255,136,0.15), transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(255,107,107,0.08), transparent 50%);
+            z-index: -1;
+            animation: bgShift 20s ease-in-out infinite;
+        }
+
+        @keyframes bgShift {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-20px, -20px) scale(1.05); }
+        }
+
+        /* ============== Layout ============== */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        /* ============== Header ============== */
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 12px;
+        }
+
+        .logo-icon {
+            font-size: 3em;
+            filter: drop-shadow(0 0 20px rgba(0,217,255,0.5));
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        h1 {
+            font-size: 2.8em;
+            font-weight: 800;
+            background: var(--gradient-main);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1em;
+            font-weight: 400;
+        }
+
+        /* ============== Theme Toggle ============== */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3em;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+        .theme-toggle:hover {
+            transform: scale(1.1) rotate(15deg);
+            border-color: var(--accent-1);
+        }
+
+        /* ============== Status Bar ============== */
+        .status-bar {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            background: var(--accent-3);
+            position: relative;
+            transition: background 0.3s;
+        }
+        .status-dot.online {
+            background: var(--accent-2);
+            box-shadow: 0 0 12px rgba(0,255,136,0.6);
+        }
+        .status-dot.online::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 2px solid var(--accent-2);
+            animation: ripple 1.5s infinite;
+        }
+        @keyframes ripple {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.8); opacity: 0; }
+        }
+
+        /* ============== Tabs ============== */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 25px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .tab {
+            flex: 1;
+            min-width: 110px;
+            padding: 14px 18px;
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 500;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        .tab:hover:not(.active) {
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+        }
+        .tab.active {
+            background: var(--gradient-main);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 6px 20px rgba(0,217,255,0.3);
+            font-weight: 600;
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ============== Card ============== */
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s;
+        }
+        .card:hover {
+            border-color: var(--border-hover);
+        }
+
+        /* ============== Record Section ============== */
+        .record-section {
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .record-btn {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            border: none;
+            font-size: 2.8em;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 25px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            color: white;
+        }
+        .record-btn.ready {
+            background: var(--gradient-warm);
+            box-shadow: 0 12px 40px rgba(255,107,107,0.4);
+        }
+        .record-btn.ready:hover {
+            transform: scale(1.08);
+            box-shadow: 0 16px 50px rgba(255,107,107,0.5);
+        }
+        .record-btn.recording {
+            background: linear-gradient(135deg, #ff4757, #ff3838);
+            animation: recordPulse 1.2s infinite;
+            box-shadow: 0 0 50px rgba(255,71,87,0.7);
+        }
+        @keyframes recordPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(255,71,87,0.6); }
+            50% { transform: scale(1.06); box-shadow: 0 0 60px rgba(255,71,87,0.8); }
+        }
+        .record-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Recording progress */
+        .rec-progress {
+            width: 100%;
+            height: 6px;
+            background: var(--border-color);
+            border-radius: 3px;
+            margin: 18px 0;
+            overflow: hidden;
+            display: none;
+        }
+        .rec-progress.active { display: block; }
+        .rec-progress-fill {
+            height: 100%;
+            background: var(--gradient-warm);
+            transition: width 0.3s linear;
+            width: 0%;
+        }
+
+        .timer {
+            font-size: 2.2em;
+            margin: 18px 0;
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: 2px;
+        }
+
+        /* Live waveform canvas */
+        .waveform-canvas {
+            width: 100%;
+            height: 80px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+        .waveform-canvas.active { display: block; }
+
+        /* ============== Buttons ============== */
+        .btn {
+            padding: 13px 32px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: inherit;
+        }
+        .btn-primary {
+            background: var(--gradient-main);
+            color: white;
+            box-shadow: 0 6px 20px rgba(0,217,255,0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,217,255,0.5);
+        }
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        .btn-secondary:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+        }
+        .btn-danger {
+            background: rgba(255,71,87,0.15);
+            color: var(--accent-3);
+            border: 1px solid rgba(255,71,87,0.3);
+        }
+        .btn-danger:hover {
+            background: rgba(255,71,87,0.25);
+        }
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* ============== Upload Zone ============== */
+        .upload-zone {
+            border: 3px dashed var(--accent-1);
+            border-radius: 16px;
+            padding: 50px 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(0,217,255,0.03);
+        }
+        .upload-zone:hover {
+            background: rgba(0,217,255,0.08);
+            border-color: var(--accent-2);
+            transform: translateY(-2px);
+        }
+        .upload-zone.dragover {
+            background: rgba(0,255,136,0.15);
+            border-color: var(--accent-2);
+            transform: scale(1.02);
+        }
+        .upload-icon { font-size: 4em; margin-bottom: 15px; }
+
+        /* ============== Results ============== */
+        .results { display: none; }
+        .results.show { display: block; animation: fadeIn 0.5s; }
+
+        .voice-type-display {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(0,217,255,0.08), rgba(0,255,136,0.08));
+            border-radius: 18px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(0,217,255,0.2);
+        }
+        .voice-type-label {
+            color: var(--text-muted);
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+        .voice-type-value {
+            font-size: 3.2em;
+            font-weight: 800;
+            background: var(--gradient-main);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+            margin: 10px 0;
+        }
+        .voice-type-confidence {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(0,255,136,0.15);
+            color: var(--accent-2);
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .voice-range-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            margin: 24px 0;
+            flex-wrap: wrap;
+        }
+        .note-pill {
+            background: linear-gradient(135deg, rgba(0,217,255,0.15), rgba(0,255,136,0.15));
+            padding: 14px 28px;
+            border-radius: 14px;
+            font-size: 1.6em;
+            font-weight: 700;
+            border: 1px solid rgba(0,217,255,0.3);
+            min-width: 100px;
+        }
+        .note-pill small {
+            display: block;
+            font-size: 0.5em;
+            color: var(--text-muted);
+            font-weight: 400;
+            margin-top: 4px;
+        }
+        .arrow-icon { font-size: 1.8em; color: var(--accent-2); }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px;
+            margin: 24px 0;
+        }
+        .result-card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 18px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
+        .result-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+        .result-label {
+            color: var(--text-muted);
+            font-size: 0.8em;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .result-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            background: var(--gradient-main);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .result-unit {
+            color: var(--text-muted);
+            font-size: 0.7em;
+            margin-top: 4px;
+        }
+
+        /* Pitch contour chart */
+        .chart-container {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 18px;
+            margin: 24px 0;
+            border: 1px solid var(--border-color);
+        }
+        .chart-title {
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .pitch-chart {
+            width: 100%;
+            height: 240px;
+            display: block;
+        }
+
+        /* ============== Library ============== */
+        .library-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 11px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 0.95em;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-1);
+            box-shadow: 0 0 0 3px rgba(0,217,255,0.15);
+        }
+
+        .library-item {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 14px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
+        .library-item:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        .library-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .library-info h4 {
+            margin: 0;
+            color: var(--text-primary);
+            font-size: 1.05em;
+            font-weight: 600;
+        }
+        .library-info .meta {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-top: 6px;
+            color: var(--text-secondary);
+            font-size: 0.85em;
+        }
+        .library-info .meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .voice-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: var(--gradient-main);
+            color: white;
+            border-radius: 16px;
+            font-size: 0.75em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .voice-badge.unknown { background: var(--text-muted); }
+        .library-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .library-actions audio {
+            height: 36px;
+            max-width: 280px;
+            min-width: 200px;
+        }
+
+        /* ============== Stats Dashboard ============== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 22px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+        .stat-card .stat-value {
+            font-size: 2.2em;
+            font-weight: 800;
+            background: var(--gradient-main);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .stat-card .stat-label {
+            color: var(--text-muted);
+            font-size: 0.85em;
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .voice-type-bars {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 22px;
+            border: 1px solid var(--border-color);
+        }
+        .voice-type-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .voice-type-bar:last-child { margin-bottom: 0; }
+        .bar-label {
+            min-width: 130px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.9em;
+        }
+        .bar-track {
+            flex: 1;
+            height: 10px;
+            background: var(--border-color);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .bar-fill {
+            height: 100%;
+            background: var(--gradient-main);
+            border-radius: 5px;
+            transition: width 0.6s ease-out;
+        }
+        .bar-count {
+            min-width: 40px;
+            text-align: right;
+            font-weight: 700;
+            color: var(--accent-1);
+        }
+
+        /* ============== Songs Grid ============== */
+        .songs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+        .song-card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
+        .song-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent-2);
+            box-shadow: 0 10px 30px rgba(0,217,255,0.15);
+        }
+        .song-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        .song-title h4 { margin: 0; color: var(--text-primary); font-size: 1.05em; }
+        .song-artist { color: var(--text-muted); font-size: 0.85em; margin: 4px 0 0 0; }
+        .match-score {
+            font-size: 1.6em;
+            font-weight: 800;
+            text-align: center;
+            line-height: 1.1;
+        }
+        .match-label {
+            font-size: 0.45em;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+        .song-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        .genre-badge {
+            background: rgba(0,217,255,0.15);
+            color: var(--accent-1);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+        .difficulty-badge {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+        .diff-BEGINNER     { background: rgba(0,255,136,0.18); color: #00ff88; }
+        .diff-INTERMEDIATE { background: rgba(255,170,0,0.18);  color: #ffaa00; }
+        .diff-ADVANCED     { background: rgba(255,71,87,0.18);  color: #ff6b6b; }
+        .diff-EXPERT       { background: rgba(255,0,128,0.18);  color: #ff0080; }
+        .song-range { color: var(--text-muted); font-size: 0.85em; margin: 8px 0; }
+        .reasons { margin: 10px 0 0 0; padding-left: 18px; color: var(--text-secondary); font-size: 0.85em; }
+        .reasons li { margin-bottom: 4px; }
+
+        /* ============== Toasts ============== */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            padding: 14px 22px;
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            transform: translateX(120%);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 400px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .toast.show { transform: translateX(0); opacity: 1; }
+        .toast.success { background: rgba(0,255,136,0.95); color: #0a0e27; }
+        .toast.error   { background: rgba(255,71,87,0.95);  color: #fff; }
+        .toast.info    { background: rgba(0,217,255,0.95); color: #0a0e27; }
+
+        /* ============== Loading & Error ============== */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 50px;
+        }
+        .loading.show { display: block; }
+        .spinner {
+            width: 60px; height: 60px;
+            border: 4px solid rgba(0,217,255,0.2);
+            border-top-color: var(--accent-1);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 18px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .error-box {
+            background: rgba(255,71,87,0.15);
+            border: 1px solid rgba(255,71,87,0.4);
+            border-radius: 12px;
+            padding: 18px;
+            color: var(--accent-3);
+            display: none;
+        }
+        .error-box.show { display: block; }
+
+        /* ============== Utility ============== */
+        .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .text-center { text-align: center; }
+        .text-muted { color: var(--text-muted); }
+        .mb-1 { margin-bottom: 8px; }
+        .mb-2 { margin-bottom: 16px; }
+        .mb-3 { margin-bottom: 24px; }
+        .mt-2 { margin-top: 16px; }
+        .hidden { display: none !important; }
+
+        /* Audio player */
+        audio { width: 100%; margin: 10px 0; }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-muted);
+            font-size: 0.9em;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            h1 { font-size: 2em; }
+            .container { padding: 16px 12px; }
+            .card { padding: 18px; }
+            .record-btn { width: 110px; height: 110px; font-size: 2.4em; }
+            .voice-type-value { font-size: 2.2em; }
+            .tabs { gap: 6px; }
+            .tab { padding: 10px 12px; font-size: 0.85em; min-width: 90px; }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Đổi theme">🌙</button>
+
+    <div class="container">
+        <header>
+            <div class="logo">
+                <span class="logo-icon">🎵</span>
+                <h1>Music Club</h1>
+                <span class="logo-icon">🎤</span>
+            </div>
+            <p class="subtitle">Phân tích giọng hát bằng AI · F0 Detection · Voice Classification</p>
+        </header>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-indicator">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Đang kết nối...</span>
+            </div>
+            <div class="row">
+                <span class="text-muted" style="font-size: 0.9em;">API: <span id="apiVersion">-</span></span>
+                <span class="text-muted" style="font-size: 0.9em;">👤 <span id="userDisplay">-</span></span>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" data-tab="record">🎤 Thu Âm</button>
+            <button class="tab" data-tab="upload">📁 Tải Lên</button>
+            <button class="tab" data-tab="library">📚 Thư Viện</button>
+            <button class="tab" data-tab="compare">⚖️ So Sánh</button>
+            <button class="tab" data-tab="stats">📊 Thống Kê</button>
+        </div>
+
+        <!-- ===== TAB: RECORD ===== -->
+        <div id="recordTab" class="tab-content active">
+            <div class="card">
+                <div class="record-section">
+                    <p id="recordStatus" class="text-muted mb-2">Nhấn nút để bắt đầu thu âm</p>
+
+                    <button id="recordBtn" class="record-btn ready" aria-label="Bắt đầu thu âm">
+                        🎤
+                    </button>
+
+                    <div class="timer" id="timer">00:00</div>
+
+                    <div class="rec-progress" id="recProgress">
+                        <div class="rec-progress-fill" id="recProgressFill"></div>
+                    </div>
+
+                    <canvas class="waveform-canvas" id="waveform"></canvas>
+
+                    <p class="text-muted" style="font-size: 0.85em;">
+                        Thời lượng tối thiểu: <strong>10s</strong> · Tối đa: <strong>60s</strong>
+                    </p>
+
+                    <div id="recordings"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== TAB: UPLOAD ===== -->
+        <div id="uploadTab" class="tab-content">
+            <div class="card">
+                <div class="upload-zone" id="uploadZone">
+                    <div class="upload-icon">🎵</div>
+                    <h3>Kéo thả file audio hoặc click để chọn</h3>
+                    <p class="text-muted mt-2">Hỗ trợ: .wav, .mp3, .flac, .m4a, .webm, .ogg</p>
+                    <p class="text-muted" style="font-size: 0.85em;">Thời lượng: 10-60 giây · Tối đa 10MB</p>
+                </div>
+                <input type="file" id="fileInput" accept="audio/*" style="display:none">
+
+                <div id="selectedFile" class="hidden mt-2 text-center">
+                    <p>📄 <span id="fileName"></span></p>
+                    <audio id="audioPreview" controls style="margin: 10px auto;"></audio>
+                </div>
+
+                <div class="text-center mt-2">
+                    <button class="btn btn-primary" id="analyzeUploadBtn" disabled>
+                        🔍 Phân Tích
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== TAB: LIBRARY ===== -->
+        <div id="libraryTab" class="tab-content">
+            <div class="card">
+                <h3 class="mb-2">📚 Thư Viện Bản Ghi</h3>
+                <p class="text-muted mb-2">Các bản thu âm đã được phân tích và lưu lại.</p>
+
+                <div class="library-controls">
+                    <input type="text" id="librarySearch" class="search-input" placeholder="🔍 Tìm theo tên file hoặc voice type...">
+                    <button class="btn btn-primary" onclick="loadRecordings()">🔄 Tải Lại</button>
+                </div>
+
+                <div id="libraryList"></div>
+            </div>
+        </div>
+
+        <!-- ===== TAB: COMPARE ===== -->
+        <div id="compareTab" class="tab-content">
+            <div class="card">
+                <h3 class="mb-2">⚖️ So Sánh 2 Bản Ghi</h3>
+                <p class="text-muted mb-2">Chọn 2 bản ghi để so sánh chi tiết về F0, range, voice type.</p>
+
+                <div class="row mb-2">
+                    <div style="flex: 1; min-width: 250px;">
+                        <label class="text-muted" style="display: block; margin-bottom: 6px; font-size: 0.85em;">📁 Bản ghi A (cũ)</label>
+                        <select id="compareSelectA" class="search-input"></select>
+                    </div>
+                    <div style="flex: 1; min-width: 250px;">
+                        <label class="text-muted" style="display: block; margin-bottom: 6px; font-size: 0.85em;">📁 Bản ghi B (mới)</label>
+                        <select id="compareSelectB" class="search-input"></select>
+                    </div>
+                </div>
+                <div class="row">
+                    <button class="btn btn-primary" onclick="compareRecordings()">⚖️ So Sánh</button>
+                    <button class="btn btn-secondary" onclick="populateCompareSelects()">🔄 Tải Lại DS</button>
+                </div>
+
+                <div id="compareResult" class="mt-2"></div>
+            </div>
+        </div>
+
+        <!-- ===== TAB: STATS ===== -->
+        <div id="statsTab" class="tab-content">
+            <div class="card">
+                <h3 class="mb-2">📊 Thống Kê Cá Nhân</h3>
+                <p class="text-muted mb-2">Tổng quan về các bản ghi của bạn.</p>
+                <div class="row mb-2">
+                    <button class="btn btn-primary" onclick="loadStats()">🔄 Tải Lại</button>
+                    <button class="btn btn-secondary" onclick="exportCSV()">📥 Xuất CSV</button>
+                </div>
+                <div id="statsContent">
+                    <p class="text-muted text-center">Đang tải...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Loading & Error ===== -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <h3>Đang phân tích...</h3>
+            <p class="text-muted">Vui lòng chỉ vài giây ⏳</p>
+        </div>
+
+        <div class="error-box" id="errorBox">
+            <strong>❌ Lỗi:</strong> <span id="errorMessage"></span>
+        </div>
+
+        <!-- ===== Results ===== -->
+        <div class="results" id="results">
+            <div class="card">
+                <h2 class="text-center mb-3">🎯 Kết Quả Phân Tích</h2>
+
+                <div class="voice-type-display">
+                    <div class="voice-type-label">Loại giọng của bạn</div>
+                    <div class="voice-type-value" id="voiceType">-</div>
+                    <div class="voice-type-confidence">
+                        <span>✓</span>
+                        <span id="voiceConfidenceText">Độ tin cậy: -</span>
+                    </div>
+                </div>
+
+                <div class="voice-range-display">
+                    <div class="note-pill">
+                        <span id="minNote">-</span>
+                        <small id="minNoteHz">-</small>
+                    </div>
+                    <span class="arrow-icon">→</span>
+                    <div class="note-pill">
+                        <span id="maxNote">-</span>
+                        <small id="maxNoteHz">-</small>
+                    </div>
+                </div>
+
+                <div class="result-grid">
+                    <div class="result-card">
+                        <div class="result-label">Trung bình</div>
+                        <div class="result-value" id="avgF0">-</div>
+                        <div class="result-unit">Hz</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-label">Tessitura (P25-P75)</div>
+                        <div class="result-value" id="tessitura" style="font-size: 1.2em;">-</div>
+                        <div class="result-unit">vùng thoải mái</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-label">Quãng</div>
+                        <div class="result-value" id="rangeSemitones">-</div>
+                        <div class="result-unit">nửa cung</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-label">Voiced</div>
+                        <div class="result-value" id="voicedRatio">-</div>
+                        <div class="result-unit">% giọng hát</div>
+                    </div>
+                </div>
+
+                <!-- Pitch Contour Chart -->
+                <div class="chart-container">
+                    <div class="chart-title">
+                        <span>📈 Đường pitch (F0 theo thời gian)</span>
+                        <small class="text-muted" id="chartSummary">-</small>
+                    </div>
+                    <canvas id="pitchChart" class="pitch-chart"></canvas>
+                </div>
+
+                <div class="row mt-2" style="justify-content: center;">
+                    <button class="btn btn-secondary" onclick="resetAnalysis()">🔄 Phân Tích Mới</button>
+                    <button class="btn btn-primary" onclick="exportResult()">💾 Xuất Kết Quả</button>
+                </div>
+            </div>
+
+            <!-- Voice Type Info -->
+            <div class="card hidden" id="voiceInfo">
+                <h3 class="mb-2">📚 Thông Tin Loại Giọng</h3>
+                <div id="voiceInfoContent"></div>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="card hidden" id="recommendationsSection">
+                <h2 class="text-center mb-2">🎵 Bài Hát Phù Hợp</h2>
+                <p class="text-center text-muted mb-2">
+                    Dựa trên quãng giọng của bạn:
+                    <strong id="recRange" style="color: var(--accent-1);">-</strong>
+                </p>
+                <div id="recommendationsList" class="songs-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toasts -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <footer>
+        <p>Music Club Platform · <span id="footerYear">2026</span></p>
+        <p class="text-muted" style="margin-top: 6px; font-size: 0.85em;">
+            DSP Service v<span id="footerVersion">1.1.0</span> · Built with ❤️ by Music Club Team
+        </p>
+    </footer>
+
+    <script>
+        // ============== Configuration ==============
+        const API_BASE = 'http://localhost:8000/api/v1';
+        const API_ROOT = 'http://localhost:8000';  // for audio streaming
+        const HEALTH_POLL_MS = 15000;
+
+        // ============== State ==============
+        const state = {
+            mediaRecorder: null,
+            audioContext: null,
+            mediaStream: null,
+            isRecording: false,
+            timerInterval: null,
+            recordingTime: 0,
+            recordedBlob: null,
+            recordedUrl: null,        // track to revoke
+            previewUrl: null,         // track to revoke
+            rafId: null,              // requestAnimationFrame id
+            analyser: null,
+            pitchChartData: null,     // last analysis F0 for chart
+            lastAnalysis: null,
+        };
+
+        // Voice type info dictionary
+        const voiceInfo = {
+            'SOPRANO':       { name: 'Soprano',       desc: 'Giọng nữ cao nhất, hát C4-C6.',      famous: 'Adele, Mariah Carey, Whitney Houston' },
+            'MEZZO_SOPRANO': { name: 'Mezzo-Soprano', desc: 'Giọng nữ trung, giữa Alto-Soprano.', famous: 'Beyoncé, Madonna, Celine Dion' },
+            'ALTO':          { name: 'Alto',          desc: 'Giọng nữ thấp / nam cao (falsetto).', famous: 'Amy Winehouse, Tracy Chapman' },
+            'TENOR':         { name: 'Tenor',         desc: 'Giọng nam cao, hát C3-C5.',         famous: 'Justin Timberlake, Ed Sheeran, Bruno Mars' },
+            'BARITONE':      { name: 'Baritone',      desc: 'Giọng nam trung, dày và ấm.',        famous: 'Tom Jones, Michael Bublé, Adam Levine' },
+            'BASS':          { name: 'Bass',          desc: 'Giọng nam thấp nhất, trầm ấm.',      famous: 'Johnny Cash, Barry White, Timbaland' }
+        };
+
+        // ============== Utilities ==============
+        function getCurrentUserId() {
+            try {
+                let uid = localStorage.getItem('mc_user_id');
+                if (!uid) {
+                    uid = 'user_' + Math.random().toString(36).slice(2, 10);
+                    localStorage.setItem('mc_user_id', uid);
+                }
+                return uid;
+            } catch (e) { return 'guest'; }
+        }
+
+        function fmtBytes(b) {
+            if (!b) return '0 B';
+            if (b < 1024) return b + ' B';
+            if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+            return (b/1048576).toFixed(2) + ' MB';
+        }
+
+        function formatVoiceType(t) {
+            const m = {
+                'SOPRANO': '🎵 Soprano', 'MEZZO_SOPRANO': '🎵 Mezzo-Soprano',
+                'ALTO': '🎵 Alto', 'TENOR': '🎤 Tenor',
+                'BARITONE': '🎤 Baritone', 'BASS': '🎤 Bass'
+            };
+            return m[t] || t || 'UNKNOWN';
+        }
+
+        function midiToNote(midi) {
+            if (!midi || midi < 21 || midi > 108) return '-';
+            const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+            return notes[Math.round(midi) % 12] + (Math.floor(Math.round(midi) / 12) - 1);
+        }
+
+        function formatTime(iso) {
+            try { return new Date(iso).toLocaleString('vi-VN'); } catch { return iso; }
+        }
+
+        // ============== Toast notifications ==============
+        function toast(msg, type = 'info', duration = 3500) {
+            const container = document.getElementById('toastContainer');
+            const el = document.createElement('div');
+            el.className = `toast ${type}`;
+            const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+            el.innerHTML = `<span>${icons[type] || ''}</span><span>${msg}</span>`;
+            container.appendChild(el);
+            requestAnimationFrame(() => el.classList.add('show'));
+            setTimeout(() => {
+                el.classList.remove('show');
+                setTimeout(() => el.remove(), 400);
+            }, duration);
+        }
+
+        // ============== Theme ==============
+        function toggleTheme() {
+            const body = document.body;
+            const isLight = body.dataset.theme === 'light';
+            body.dataset.theme = isLight ? '' : 'light';
+            try { localStorage.setItem('mc_theme', isLight ? 'dark' : 'light'); } catch {}
+            document.getElementById('themeToggle').textContent = isLight ? '🌙' : '☀️';
+        }
+
+        function loadTheme() {
+            try {
+                const t = localStorage.getItem('mc_theme');
+                if (t === 'light') {
+                    document.body.dataset.theme = 'light';
+                    document.getElementById('themeToggle').textContent = '☀️';
+                }
+            } catch {}
+        }
+
+        // ============== Tabs ==============
+        function switchTab(name) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            const tabBtn = document.querySelector(`[data-tab="${name}"]`);
+            const tabContent = document.getElementById(`${name}Tab`);
+            if (tabBtn) tabBtn.classList.add('active');
+            if (tabContent) tabContent.classList.add('active');
+            if (name === 'library') loadRecordings();
+            if (name === 'stats') loadStats();
+        }
+        document.querySelectorAll('.tab').forEach(t => {
+            t.addEventListener('click', () => switchTab(t.dataset.tab));
+        });
+
+        // ============== Health check ==============
+        async function checkHealth() {
+            try {
+                const r = await fetch(`${API_BASE}/health`);
+                if (!r.ok) throw new Error();
+                const data = await r.json();
+                document.getElementById('statusDot').classList.add('online');
+                document.getElementById('statusText').textContent = 'Đã kết nối';
+                document.getElementById('apiVersion').textContent = data.version || '1.0.0';
+                document.getElementById('footerVersion').textContent = data.version || '1.0.0';
+            } catch (e) {
+                document.getElementById('statusDot').classList.remove('online');
+                document.getElementById('statusText').textContent = 'Mất kết nối';
+            }
+        }
+
+        // ============== Drag & Drop ==============
+        function setupDragDrop() {
+            const zone = document.getElementById('uploadZone');
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => {
+                zone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); });
+            });
+            ['dragenter', 'dragover'].forEach(ev => {
+                zone.addEventListener(ev, () => zone.classList.add('dragover'));
+            });
+            ['dragleave', 'drop'].forEach(ev => {
+                zone.addEventListener(ev, () => zone.classList.remove('dragover'));
+            });
+            zone.addEventListener('drop', e => handleFileSelect(e.dataTransfer.files[0]));
+            zone.addEventListener('click', () => document.getElementById('fileInput').click());
+            document.getElementById('fileInput').addEventListener('change', e => handleFileSelect(e.target.files[0]));
+        }
+
+        function handleFileSelect(file) {
+            if (!file) return;
+            const validExts = ['.wav', '.webm', '.mp3', '.ogg', '.m4a', '.flac', '.aac'];
+            const ext = '.' + file.name.split('.').pop().toLowerCase();
+            if (!validExts.includes(ext)) {
+                toast('Định dạng không hỗ trợ. Chọn file .wav, .mp3, .flac, .m4a...', 'error');
+                return;
+            }
+            // Revoke old preview URL
+            if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
+            state.previewUrl = URL.createObjectURL(file);
+            document.getElementById('fileName').textContent = `${file.name} · ${fmtBytes(file.size)}`;
+            document.getElementById('audioPreview').src = state.previewUrl;
+            document.getElementById('selectedFile').classList.remove('hidden');
+            document.getElementById('analyzeUploadBtn').disabled = false;
+        }
+
+        // ============== Recording ==============
+        async function toggleRecording() {
+            if (state.isRecording) stopRecording();
+            else await startRecording();
+        }
+
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                state.mediaStream = stream;
+                state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const source = state.audioContext.createMediaStreamSource(stream);
+                const processor = state.audioContext.createScriptProcessor(4096, 1, 1);
+                const analyser = state.audioContext.createAnalyser();
+                analyser.fftSize = 2048;
+                source.connect(analyser);
+                analyser.connect(processor);
+                processor.connect(state.audioContext.destination);
+
+                const recordedBuffers = [];
+                processor.onaudioprocess = e => {
+                    if (state.isRecording) {
+                        recordedBuffers.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+                    }
+                };
+
+                state._processor = processor;
+                state._source = source;
+                state._analyser = analyser;
+                state._recordedBuffers = recordedBuffers;
+
+                state.isRecording = true;
+                state.recordingTime = 0;
+                updateUI();
+                drawWaveform();  // start live waveform
+
+                document.getElementById('waveform').classList.add('active');
+                document.getElementById('recProgress').classList.add('active');
+
+                state.timerInterval = setInterval(() => {
+                    state.recordingTime++;
+                    updateTimer();
+                    // Auto stop at 60s
+                    if (state.recordingTime >= 60) stopRecording();
+                }, 1000);
+
+            } catch (err) {
+                console.error(err);
+                toast('Không thể truy cập microphone. Vui lòng cho phép.', 'error');
+            }
+        }
+
+        function stopRecording() {
+            state.isRecording = false;
+            clearInterval(state.timerInterval);
+            cancelAnimationFrame(state.rafId);
+
+            // Cleanup nodes
+            try {
+                if (state._processor) state._processor.disconnect();
+                if (state._source) state._source.disconnect();
+                if (state._analyser) state._analyser.disconnect();
+                if (state.mediaStream) state.mediaStream.getTracks().forEach(t => t.stop());
+                if (state.audioContext && state.audioContext.state !== 'closed') {
+                    state.audioContext.close();
+                }
+            } catch (e) { console.warn('Cleanup error:', e); }
+
+            // Encode WAV
+            if (state._recordedBuffers && state._recordedBuffers.length > 0) {
+                const total = state._recordedBuffers.reduce((acc, b) => acc + b.length, 0);
+                const merged = new Float32Array(total);
+                let offset = 0;
+                for (const buf of state._recordedBuffers) { merged.set(buf, offset); offset += buf.length; }
+                state.recordedBlob = encodeWAV(merged, state.audioContext ? state.audioContext.sampleRate : 44100);
+                addRecordingPreview();
+            }
+
+            document.getElementById('waveform').classList.remove('active');
+            document.getElementById('recProgress').classList.remove('active');
+            updateUI();
+        }
+
+        function drawWaveform() {
+            const canvas = document.getElementById('waveform');
+            if (!canvas || !state._analyser) return;
+            const ctx = canvas.getContext('2d');
+            const W = canvas.width = canvas.offsetWidth * (window.devicePixelRatio || 1);
+            const H = canvas.height = canvas.offsetHeight * (window.devicePixelRatio || 1);
+            const buffer = new Uint8Array(state._analyser.fftSize);
+            state._analyser.getByteTimeDomainData(buffer);
+
+            ctx.fillStyle = 'rgba(0,0,0,0.25)';
+            ctx.fillRect(0, 0, W, H);
+
+            ctx.lineWidth = 2 * (window.devicePixelRatio || 1);
+            ctx.strokeStyle = '#00d9ff';
+            ctx.beginPath();
+            const slice = W / buffer.length;
+            let x = 0;
+            for (let i = 0; i < buffer.length; i++) {
+                const v = buffer[i] / 128.0;
+                const y = (v * H) / 2;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+                x += slice;
+            }
+            ctx.stroke();
+
+            if (state.isRecording) state.rafId = requestAnimationFrame(drawWaveform);
+        }
+
+        function encodeWAV(samples, sampleRate) {
+            const buffer = new ArrayBuffer(44 + samples.length * 2);
+            const view = new DataView(buffer);
+            const writeString = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+            writeString(0, 'RIFF');
+            view.setUint32(4, 36 + samples.length * 2, true);
+            writeString(8, 'WAVE'); writeString(12, 'fmt ');
+            view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+            view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+            writeString(36, 'data'); view.setUint32(40, samples.length * 2, true);
+            let off = 44;
+            for (let i = 0; i < samples.length; i++) {
+                const s = Math.max(-1, Math.min(1, samples[i]));
+                view.setInt16(off, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+                off += 2;
+            }
+            return new Blob([buffer], { type: 'audio/wav' });
+        }
+
+        function updateTimer() {
+            const m = Math.floor(state.recordingTime / 60).toString().padStart(2, '0');
+            const s = (state.recordingTime % 60).toString().padStart(2, '0');
+            document.getElementById('timer').textContent = `${m}:${s}`;
+            // Progress bar (10s = required, 60s = max)
+            const pct = Math.min(100, (state.recordingTime / 60) * 100);
+            document.getElementById('recProgressFill').style.width = pct + '%';
+        }
+
+        function updateUI() {
+            const btn = document.getElementById('recordBtn');
+            const status = document.getElementById('recordStatus');
+            if (state.isRecording) {
+                btn.classList.remove('ready'); btn.classList.add('recording');
+                btn.textContent = '⏹';
+                status.textContent = 'Đang thu âm... Nhấn để dừng';
+            } else {
+                btn.classList.remove('recording'); btn.classList.add('ready');
+                btn.textContent = '🎤';
+                status.textContent = state.recordingTime >= 10
+                    ? '✅ Thu âm hoàn tất! Nhấn "Phân Tích" để xem kết quả'
+                    : state.recordingTime > 0
+                        ? `⚠️ Cần thu âm tối thiểu 10s (hiện tại: ${state.recordingTime}s)`
+                        : 'Nhấn nút để bắt đầu thu âm';
+            }
+        }
+
+        function addRecordingPreview() {
+            const container = document.getElementById('recordings');
+            container.innerHTML = '';  // reset to avoid duplication
+            // Revoke previous URL
+            if (state.recordedUrl) URL.revokeObjectURL(state.recordedUrl);
+            state.recordedUrl = URL.createObjectURL(state.recordedBlob);
+            const div = document.createElement('div');
+            div.style.cssText = 'background: var(--bg-card); padding: 20px; border-radius: 12px; margin-top: 20px; border: 1px solid var(--border-color);';
+            div.innerHTML = `
+                <p style="margin-bottom: 10px;">🎵 Bản ghi: <strong>${state.recordingTime}s</strong> · ${fmtBytes(state.recordedBlob.size)}</p>
+                <audio controls src="${state.recordedUrl}" style="width: 100%;"></audio>
+                <div class="text-center mt-2">
+                    <button class="btn btn-primary" onclick="analyzeRecording()">🔍 Phân Tích & Lưu</button>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        // ============== Analysis ==============
+        async function analyzeUploadedFile() {
+            const file = document.getElementById('fileInput').files[0];
+            if (!file) return toast('Vui lòng chọn file audio', 'error');
+            await analyzeFile(file, false);
+        }
+
+        async function analyzeRecording() {
+            if (!state.recordedBlob) return toast('Không có bản ghi', 'error');
+            if (state.recordingTime < 10) return toast(`Cần thu âm tối thiểu 10s (hiện tại: ${state.recordingTime}s)`, 'error');
+            const ts = Date.now();
+            const file = new File([state.recordedBlob], `recording_${ts}.wav`, { type: 'audio/wav' });
+            await analyzeFile(file, true);
+        }
+
+        async function analyzeFile(file, saveAfter = false) {
+            hideError();
+            showLoading(true);
+            const fd = new FormData();
+            fd.append('file', file);
+            try {
+                const r = await fetch(`${API_BASE}/voice/analyze`, { method: 'POST', body: fd });
+                const data = await r.json();
+                if (!r.ok) throw new Error(data.detail || data.message || 'Phân tích thất bại');
+                const result = data.data || data;
+                state.lastAnalysis = result;
+                showResults(result);
+                if (saveAfter) await saveRecordingToLibrary(file, result);
+                await loadRecommendations(result);
+                toast('Phân tích hoàn tất!', 'success');
+            } catch (e) {
+                console.error(e);
+                showError(e.message);
+                toast('Lỗi: ' + e.message, 'error', 5000);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function saveRecordingToLibrary(file, analysis) {
+            const userId = getCurrentUserId();
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('user_id', userId);
+            fd.append('voice_type', analysis.voice_type || 'UNKNOWN');
+            fd.append('voice_type_confidence', analysis.voice_type_confidence || 0);
+            fd.append('min_midi', analysis.min_midi || 0);
+            fd.append('max_midi', analysis.max_midi || 0);
+            fd.append('median_midi', analysis.median_f0 ? Math.round(12 * Math.log2(analysis.median_f0 / 440) + 69) : 0);
+            fd.append('min_f0', analysis.min_f0 || 0);
+            fd.append('max_f0', analysis.max_f0 || 0);
+            fd.append('avg_f0', analysis.avg_f0 || 0);
+            fd.append('std_f0', analysis.std_f0 || 0);
+            fd.append('p25_f0', analysis.p25_f0 || 0);
+            fd.append('p75_f0', analysis.p75_f0 || 0);
+            fd.append('iqr_f0', analysis.iqr_f0 || 0);
+            fd.append('range_semitones', analysis.range_semitones || 0);
+            fd.append('confidence', analysis.confidence || 0);
+            fd.append('voiced_ratio', analysis.voiced_ratio || 0);
+            fd.append('notes', `Auto-saved from ${file.name}`);
+
+            try {
+                const r = await fetch(`${API_BASE}/voice/save-recording`, { method: 'POST', body: fd });
+                if (r.ok) {
+                    const d = await r.json();
+                    toast(`Đã lưu vào thư viện (ID: ${d.data.recording_id.slice(0, 8)}…)`, 'success');
+                } else {
+                    toast('Lưu vào thư viện thất bại', 'error');
+                }
+            } catch (e) {
+                console.error('Save failed:', e);
+            }
+        }
+
+        async function loadRecommendations(analysis) {
+            try {
+                const r = await fetch(`${API_BASE}/voice/recommend-songs`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        voice_type: analysis.voice_type || 'UNKNOWN',
+                        min_midi: analysis.min_midi || 0,
+                        max_midi: analysis.max_midi || 0,
+                        avg_f0: analysis.avg_f0 || 200,
+                        range_semitones: analysis.range_semitones || 12,
+                        preferred_genres: [],
+                        max_results: 8
+                    })
+                });
+                if (!r.ok) return;
+                const data = await r.json();
+                renderRecommendations(data.data);
+            } catch (e) { console.error('Recommend failed:', e); }
+        }
+
+        function renderRecommendations(data) {
+            const section = document.getElementById('recommendationsSection');
+            const container = document.getElementById('recommendationsList');
+            if (!section || !container) return;
+            const recs = (data && data.recommendations) || [];
+            if (recs.length === 0) { section.classList.add('hidden'); return; }
+            const range = data.user_range || {};
+            document.getElementById('recRange').textContent =
+                `${range.min_note || '-'} → ${range.max_note || '-'} (${(range.range_semitones || 0).toFixed(1)} semitones)`;
+            const diffMap = { BEGINNER: 'Dễ', INTERMEDIATE: 'Trung bình', ADVANCED: 'Khó', EXPERT: 'Rất khó' };
+            container.innerHTML = recs.map(s => {
+                const pct = s.match_pct || 0;
+                const pctColor = pct >= 80 ? '#00ff88' : pct >= 60 ? '#00d9ff' : '#ffaa00';
+                const genres = (s.genres || []).map(g => `<span class="genre-badge">${g}</span>`).join('');
+                const reasons = (s.reasons || []).slice(0, 2).map(r => `<li>${r}</li>`).join('');
+                return `
+                <div class="song-card">
+                    <div class="song-header">
+                        <div class="song-title">
+                            <h4>${s.title}</h4>
+                            <p class="song-artist">${s.artist}</p>
+                        </div>
+                        <div class="match-score" style="color: ${pctColor};">
+                            ${pct}%<br><span class="match-label">phù hợp</span>
+                        </div>
+                    </div>
+                    <div class="song-meta">
+                        <span class="difficulty-badge diff-${s.difficulty}">${diffMap[s.difficulty] || s.difficulty}</span>
+                        ${genres}
+                    </div>
+                    <div class="song-range">🎼 Quãng: ${midiToNote(s.min_midi)} - ${midiToNote(s.max_midi)}</div>
+                    <ul class="reasons">${reasons}</ul>
+                </div>`;
+            }).join('');
+            section.classList.remove('hidden');
+        }
+
+        // ============== Results display ==============
+        function showResults(d) {
+            const r = document.getElementById('results');
+            r.classList.add('show');
+            r.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            document.getElementById('voiceType').textContent = formatVoiceType(d.voice_type);
+            const conf = (d.voice_type_confidence || 0) * 100;
+            document.getElementById('voiceConfidenceText').textContent = `Độ tin cậy: ${conf.toFixed(0)}%`;
+
+            const minN = d.min_note || midiToNote(d.min_midi);
+            const maxN = d.max_note || midiToNote(d.max_midi);
+            document.getElementById('minNote').textContent = minN;
+            document.getElementById('maxNote').textContent = maxN;
+            document.getElementById('minNoteHz').textContent = d.min_f0 ? `${d.min_f0.toFixed(1)} Hz` : '-';
+            document.getElementById('maxNoteHz').textContent = d.max_f0 ? `${d.max_f0.toFixed(1)} Hz` : '-';
+            document.getElementById('avgF0').textContent = d.avg_f0 ? d.avg_f0.toFixed(1) : '-';
+
+            // Tessitura display
+            if (d.p25_f0 && d.p75_f0) {
+                document.getElementById('tessitura').textContent =
+                    `${d.p25_f0.toFixed(0)}-${d.p75_f0.toFixed(0)} Hz`;
+            } else {
+                document.getElementById('tessitura').textContent = '-';
+            }
+
+            document.getElementById('rangeSemitones').textContent = d.range_semitones ? d.range_semitones.toFixed(1) : '-';
+            document.getElementById('voicedRatio').textContent = d.voiced_ratio ? (d.voiced_ratio * 100).toFixed(0) : '-';
+
+            // Draw pitch chart from F0 contour if available
+            if (d.f0_times && d.f0_hz) {
+                drawPitchChart(d.f0_times, d.f0_hz, d.avg_f0, d.min_f0, d.max_f0);
+            } else {
+                document.getElementById('chartSummary').textContent = 'Không có dữ liệu F0';
+            }
+
+            // Voice info card
+            const info = voiceInfo[d.voice_type];
+            if (info) {
+                document.getElementById('voiceInfo').classList.remove('hidden');
+                document.getElementById('voiceInfoContent').innerHTML = `
+                    <h4 style="color: var(--accent-1); margin-bottom: 10px;">${info.name}</h4>
+                    <p class="mb-2">${info.desc}</p>
+                    <p class="text-muted"><strong>Nghệ sĩ tiêu biểu:</strong> ${info.famous}</p>
+                `;
+            }
+        }
+
+        function drawPitchChart(times, f0, avgF0, minF0, maxF0) {
+            const canvas = document.getElementById('pitchChart');
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = canvas.offsetWidth * dpr;
+            canvas.height = canvas.offsetHeight * dpr;
+            const W = canvas.width, H = canvas.height;
+
+            // Filter voiced frames
+            const pts = [];
+            for (let i = 0; i < f0.length; i++) {
+                if (!isNaN(f0[i]) && f0[i] > 0) pts.push({ t: times[i], f: f0[i] });
+            }
+
+            if (pts.length === 0) {
+                ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                ctx.font = `${14 * dpr}px sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.fillText('Không có dữ liệu pitch', W/2, H/2);
+                return;
+            }
+
+            const tMin = pts[0].t, tMax = pts[pts.length-1].t;
+            const fMin = Math.min(...pts.map(p => p.f)) * 0.9;
+            const fMax = Math.max(...pts.map(p => p.f)) * 1.1;
+
+            // Background grid
+            ctx.fillStyle = 'rgba(0,0,0,0.15)';
+            ctx.fillRect(0, 0, W, H);
+            ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+            ctx.lineWidth = 1 * dpr;
+            for (let i = 0; i < 5; i++) {
+                const y = (i / 4) * H;
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+            }
+
+            // Average line
+            if (avgF0) {
+                const y = H - ((avgF0 - fMin) / (fMax - fMin)) * H;
+                ctx.strokeStyle = 'rgba(0,255,136,0.4)';
+                ctx.setLineDash([5*dpr, 5*dpr]);
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.fillStyle = 'rgba(0,255,136,0.9)';
+                ctx.font = `${11 * dpr}px sans-serif`;
+                ctx.fillText(`avg: ${avgF0.toFixed(0)} Hz`, 8*dpr, y - 4*dpr);
+            }
+
+            // F0 line with gradient
+            const grad = ctx.createLinearGradient(0, 0, W, 0);
+            grad.addColorStop(0, '#00d9ff');
+            grad.addColorStop(1, '#00ff88');
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = 2.5 * dpr;
+            ctx.beginPath();
+            pts.forEach((p, i) => {
+                const x = ((p.t - tMin) / (tMax - tMin)) * W;
+                const y = H - ((p.f - fMin) / (fMax - fMin)) * H;
+                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+
+            // Summary
+            document.getElementById('chartSummary').textContent =
+                `min ${minF0.toFixed(0)} · avg ${avgF0.toFixed(0)} · max ${maxF0.toFixed(0)} Hz`;
+        }
+
+        // ============== Library ==============
+        async function loadRecordings() {
+            const userId = getCurrentUserId();
+            const container = document.getElementById('libraryList');
+            container.innerHTML = '<p class="text-muted text-center">⏳ Đang tải...</p>';
+            try {
+                const r = await fetch(`${API_BASE}/recordings/${userId}`);
+                const data = await r.json();
+                const items = (data.data || []).filter(it => it.file_size > 1000);  // skip placeholders
+                const search = (document.getElementById('librarySearch').value || '').toLowerCase();
+                const filtered = search
+                    ? items.filter(it =>
+                        (it.filename || '').toLowerCase().includes(search) ||
+                        (it.voice_type || '').toLowerCase().includes(search))
+                    : items;
+
+                if (filtered.length === 0) {
+                    container.innerHTML = '<p class="text-muted text-center" style="padding: 30px;">📭 Không có bản ghi nào. Hãy thu âm hoặc tải file lên!</p>';
+                    return;
+                }
+
+                container.innerHTML = filtered.map(it => {
+                    const audioUrl = `${API_BASE}/recordings/${userId}/${it.id}/audio`;
+                    const minN = it.min_midi ? midiToNote(it.min_midi) : '-';
+                    const maxN = it.max_midi ? midiToNote(it.max_midi) : '-';
+                    const isUnknown = !it.voice_type || it.voice_type === 'UNKNOWN';
+                    return `
+                    <div class="library-item">
+                        <div class="library-header">
+                            <div class="library-info">
+                                <h4>${it.filename}</h4>
+                                <div class="meta">
+                                    <span class="voice-badge ${isUnknown ? 'unknown' : ''}">${it.voice_type || 'UNKNOWN'}</span>
+                                    <span>🎼 ${minN} - ${maxN}</span>
+                                    <span>📏 ${(it.range_semitones || 0).toFixed ? it.range_semitones.toFixed(1) : it.range_semitones} st</span>
+                                    <span>🎯 ${((it.confidence || 0) * 100).toFixed(0)}%</span>
+                                    <span>💾 ${fmtBytes(it.file_size)}</span>
+                                </div>
+                                <div class="meta">
+                                    <span>🕐 ${formatTime(it.saved_at)}</span>
+                                    ${it.duration_seconds ? `<span>⏱️ ${it.duration_seconds.toFixed(1)}s</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="library-actions">
+                                <audio controls src="${audioUrl}" preload="none"></audio>
+                                ${isUnknown ? `<button class="btn btn-secondary" onclick="reanalyzeRecording('${it.id}')" title="Phân tích lại">🔄</button>` : ''}
+                                <button class="btn btn-danger" onclick="deleteRecording('${it.id}')">🗑️</button>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch (e) {
+                container.innerHTML = `<p style="color: var(--accent-3);">❌ Lỗi: ${e.message}</p>`;
+            }
+        }
+
+        async function reanalyzeRecording(recId) {
+            const userId = getCurrentUserId();
+            try {
+                toast('Đang phân tích lại...', 'info', 2000);
+                const r = await fetch(`${API_BASE}/recordings/${userId}/${recId}/reanalyze`, { method: 'POST' });
+                if (r.ok) {
+                    toast('Phân tích lại thành công!', 'success');
+                    loadRecordings();
+                } else {
+                    const d = await r.json();
+                    toast('Lỗi: ' + (d.detail || 'Không rõ'), 'error');
+                }
+            } catch (e) {
+                toast('Lỗi: ' + e.message, 'error');
+            }
+        }
+
+        async function deleteRecording(recId) {
+            if (!confirm('Xóa bản ghi này?')) return;
+            const userId = getCurrentUserId();
+            try {
+                const r = await fetch(`${API_BASE}/recordings/${userId}/${recId}`, { method: 'DELETE' });
+                if (r.ok) { toast('Đã xóa', 'success'); loadRecordings(); }
+                else toast('Xóa thất bại', 'error');
+            } catch (e) { toast('Lỗi: ' + e.message, 'error'); }
+        }
+
+        document.getElementById('librarySearch').addEventListener('input', loadRecordings);
+
+        async function exportCSV() {
+            const userId = getCurrentUserId();
+            try {
+                const r = await fetch(`${API_BASE}/recordings/export?user_id=${encodeURIComponent(userId)}`, { method: 'POST' });
+                if (!r.ok) throw new Error('Export failed');
+                const blob = await r.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `recordings_${userId}_${Date.now()}.csv`;
+                a.click();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+                toast('Đã xuất file CSV', 'success');
+            } catch (e) {
+                toast('Lỗi xuất CSV: ' + e.message, 'error');
+            }
+        }
+
+        // ============== Compare ==============
+        async function populateCompareSelects() {
+            const userId = getCurrentUserId();
+            try {
+                const r = await fetch(`${API_BASE}/recordings/${userId}`);
+                const data = await r.json();
+                const items = (data.data || []).filter(it => it.file_size > 1000);
+                const opts = items.map(it =>
+                    `<option value="${it.id}">${it.filename} · ${it.voice_type || 'UNKNOWN'} · ${formatTime(it.saved_at)}</option>`
+                ).join('');
+                const html = '<option value="">-- Chọn bản ghi --</option>' + opts;
+                document.getElementById('compareSelectA').innerHTML = html;
+                document.getElementById('compareSelectB').innerHTML = html;
+                // Auto-pick most recent for B
+                if (items.length >= 2) {
+                    document.getElementById('compareSelectB').value = items[0].id;
+                    document.getElementById('compareSelectA').value = items[1].id;
+                } else if (items.length === 1) {
+                    document.getElementById('compareSelectB').value = items[0].id;
+                }
+            } catch (e) {
+                toast('Lỗi tải danh sách: ' + e.message, 'error');
+            }
+        }
+
+        async function compareRecordings() {
+            const userId = getCurrentUserId();
+            const idA = document.getElementById('compareSelectA').value;
+            const idB = document.getElementById('compareSelectB').value;
+            const resultDiv = document.getElementById('compareResult');
+            if (!idA || !idB) { toast('Vui lòng chọn 2 bản ghi', 'error'); return; }
+            if (idA === idB) { toast('Hãy chọn 2 bản ghi khác nhau', 'error'); return; }
+            resultDiv.innerHTML = '<p class="text-muted text-center">⏳ Đang so sánh...</p>';
+            try {
+                const r = await fetch(`${API_BASE}/recordings/compare`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, recording_id_a: idA, recording_id_b: idB })
+                });
+                if (!r.ok) {
+                    const d = await r.json();
+                    throw new Error(d.detail || 'So sánh thất bại');
+                }
+                const data = (await r.json()).data;
+                renderCompareResult(data);
+            } catch (e) {
+                resultDiv.innerHTML = `<p style="color: var(--accent-3);">❌ ${e.message}</p>`;
+            }
+        }
+
+        function renderCompareResult(d) {
+            const a = d.recording_a, b = d.recording_b;
+            const deltas = d.deltas;
+            const simColor = d.similarity_score >= 85 ? '#00ff88' :
+                            d.similarity_score >= 60 ? '#00d9ff' : '#ffaa00';
+            const deltaStr = (v, suffix = '') => {
+                if (v === null || v === undefined) return '<span class="text-muted">-</span>';
+                const sign = v > 0 ? '+' : '';
+                const color = v > 0 ? 'var(--accent-2)' : v < 0 ? 'var(--accent-3)' : 'var(--text-muted)';
+                return `<span style="color: ${color}; font-weight: 600;">${sign}${typeof v === 'number' ? v.toFixed(2) : v}${suffix}</span>`;
+            };
+
+            document.getElementById('compareResult').innerHTML = `
+                <div class="voice-type-display">
+                    <div class="voice-type-label">Điểm tương đồng</div>
+                    <div class="voice-type-value" style="background: linear-gradient(135deg, ${simColor}, #00d9ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                        ${d.similarity_score}%
+                    </div>
+                </div>
+
+                <div class="result-grid">
+                    <div class="result-card">
+                        <div class="result-label">Voice Type A → B</div>
+                        <div class="result-value" style="font-size: 1.2em;">${a.voice_type || '?'} → ${b.voice_type || '?'}</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-label">avg F0 (B-A)</div>
+                        <div class="result-value" style="font-size: 1.2em;">${deltaStr(deltas.avg_f0, ' Hz')}</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-label">Range (B-A)</div>
+                        <div class="result-value" style="font-size: 1.2em;">${deltaStr(deltas.range_semitones, ' st')}</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-label">Confidence (B-A)</div>
+                        <div class="result-value" style="font-size: 1.2em;">${deltaStr(deltas.confidence ? deltas.confidence * 100 : null, '%')}</div>
+                    </div>
+                </div>
+
+                <div class="stats-grid mt-2">
+                    <div class="stat-card" style="text-align: left;">
+                        <h4 class="mb-1">📁 A: ${a.filename}</h4>
+                        <p class="text-muted">${formatTime(a.saved_at)}</p>
+                        <p style="margin-top: 10px;">avg <strong>${a.avg_f0?.toFixed(1) || '-'}</strong> Hz · range <strong>${a.range_semitones?.toFixed(1) || '-'}</strong> st</p>
+                        <p>voiced <strong>${((a.voiced_ratio || 0) * 100).toFixed(0)}%</strong> · conf <strong>${((a.confidence || 0) * 100).toFixed(0)}%</strong></p>
+                    </div>
+                    <div class="stat-card" style="text-align: left;">
+                        <h4 class="mb-1">📁 B: ${b.filename}</h4>
+                        <p class="text-muted">${formatTime(b.saved_at)}</p>
+                        <p style="margin-top: 10px;">avg <strong>${b.avg_f0?.toFixed(1) || '-'}</strong> Hz · range <strong>${b.range_semitones?.toFixed(1) || '-'}</strong> st</p>
+                        <p>voiced <strong>${((b.voiced_ratio || 0) * 100).toFixed(0)}%</strong> · conf <strong>${((b.confidence || 0) * 100).toFixed(0)}%</strong></p>
+                    </div>
+                </div>
+
+                <div class="card mt-2">
+                    <h4 class="mb-2">💡 Nhận xét</h4>
+                    <ul style="padding-left: 20px;">
+                        ${d.insights.map(i => `<li class="mb-1">${i}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        // Override switchTab to populate compare selects
+        const _origSwitchTab = window.switchTab;
+        window.switchTab = function(name) {
+            _origSwitchTab(name);
+            if (name === 'compare') populateCompareSelects();
+        };
+
+        // ============== Stats ==============
+        async function loadStats() {
+            const userId = getCurrentUserId();
+            const container = document.getElementById('statsContent');
+            container.innerHTML = '<p class="text-muted text-center">⏳ Đang tải...</p>';
+            try {
+                const r = await fetch(`${API_BASE}/stats/${userId}`);
+                const data = await r.json();
+                const s = data.data || {};
+                if (!s.total_recordings) {
+                    container.innerHTML = '<p class="text-muted text-center" style="padding: 30px;">📭 Chưa có bản ghi nào.</p>';
+                    return;
+                }
+
+                const dist = s.voice_type_distribution || {};
+                const maxCount = Math.max(...Object.values(dist), 1);
+
+                container.innerHTML = `
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">${s.total_recordings}</div>
+                            <div class="stat-label">Bản ghi</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${s.avg_f0_mean ? s.avg_f0_mean.toFixed(1) : '-'}</div>
+                            <div class="stat-label">Hz trung bình</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${s.avg_range_semitones ? s.avg_range_semitones.toFixed(1) : '-'}</div>
+                            <div class="stat-label">Quãng TB (st)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${fmtBytes(s.total_size_bytes)}</div>
+                            <div class="stat-label">Dung lượng</div>
+                        </div>
+                    </div>
+                    <div class="voice-type-bars">
+                        <h4 class="mb-2">📊 Phân bố Voice Type</h4>
+                        ${Object.entries(dist).sort((a, b) => b[1] - a[1]).map(([type, count]) => `
+                            <div class="voice-type-bar">
+                                <span class="bar-label">${formatVoiceType(type)}</span>
+                                <div class="bar-track">
+                                    <div class="bar-fill" style="width: ${(count / maxCount * 100)}%"></div>
+                                </div>
+                                <span class="bar-count">${count}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } catch (e) {
+                container.innerHTML = `<p style="color: var(--accent-3);">❌ Lỗi: ${e.message}</p>`;
+            }
+        }
+
+        // ============== Export & Reset ==============
+        function exportResult() {
+            if (!state.lastAnalysis) return;
+            const blob = new Blob([JSON.stringify(state.lastAnalysis, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `voice_analysis_${Date.now()}.json`;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            toast('Đã xuất file JSON', 'success');
+        }
+
+        function resetAnalysis() {
+            document.getElementById('results').classList.remove('show');
+            document.getElementById('recommendationsSection').classList.add('hidden');
+            document.getElementById('voiceInfo').classList.add('hidden');
+            document.getElementById('recordings').innerHTML = '';
+            document.getElementById('selectedFile').classList.add('hidden');
+            document.getElementById('fileInput').value = '';
+            document.getElementById('analyzeUploadBtn').disabled = true;
+            document.getElementById('timer').textContent = '00:00';
+            document.getElementById('recProgressFill').style.width = '0%';
+            // Cleanup blob URLs
+            if (state.recordedUrl) { URL.revokeObjectURL(state.recordedUrl); state.recordedUrl = null; }
+            if (state.previewUrl) { URL.revokeObjectURL(state.previewUrl); state.previewUrl = null; }
+            state.recordedBlob = null;
+            state.recordingTime = 0;
+            updateUI();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showLoading(b) {
+            document.getElementById('loading').classList.toggle('show', b);
+        }
+        function showError(m) {
+            const box = document.getElementById('errorBox');
+            box.classList.add('show');
+            document.getElementById('errorMessage').textContent = m;
+        }
+        function hideError() {
+            document.getElementById('errorBox').classList.remove('show');
+        }
+
+        // ============== Init ==============
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTheme();
+            checkHealth();
+            setInterval(checkHealth, HEALTH_POLL_MS);
+            setupDragDrop();
+            document.getElementById('analyzeUploadBtn').addEventListener('click', analyzeUploadedFile);
+            document.getElementById('recordBtn').addEventListener('click', toggleRecording);
+            document.getElementById('userDisplay').textContent = getCurrentUserId();
+            document.getElementById('footerYear').textContent = new Date().getFullYear();
+        });
+    </script>
+</body>
+</html>

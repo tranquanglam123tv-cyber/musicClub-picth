@@ -22,3 +22,6 @@ Thumbs.db
 
 # Temporary files
 *.tmp
+
+music-club-platform/dsp-service/recordings/
+music-club-platform/dsp-service/test_audio.wav
